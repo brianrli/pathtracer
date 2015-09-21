@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		C74DF08D1B9FBC7F0002CA28 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C74DF08C1B9FBC7F0002CA28 /* main.cpp */; };
+		C74DF0941B9FBCD80002CA28 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C74DF0931B9FBCD80002CA28 /* OpenCL.framework */; };
+		C78DFD701BAF35D700E58B64 /* pathtracer_kernel.cl in Sources */ = {isa = PBXBuildFile; fileRef = C78DFD6F1BAF35D700E58B64 /* pathtracer_kernel.cl */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -23,8 +25,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		C74DF0891B9FBC7F0002CA28 /* opencl_test_ii */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = opencl_test_ii; sourceTree = BUILT_PRODUCTS_DIR; };
+		C74DF0891B9FBC7F0002CA28 /* pathtracer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = pathtracer; sourceTree = BUILT_PRODUCTS_DIR; };
 		C74DF08C1B9FBC7F0002CA28 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		C74DF0931B9FBCD80002CA28 /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/OpenCL.framework; sourceTree = "<absolute>"; };
+		C78DFD6F1BAF35D700E58B64 /* pathtracer_kernel.cl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.opencl; path = pathtracer_kernel.cl; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,6 +36,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C74DF0941B9FBCD80002CA28 /* OpenCL.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -41,7 +46,8 @@
 		C74DF0801B9FBC7F0002CA28 = {
 			isa = PBXGroup;
 			children = (
-				C74DF08B1B9FBC7F0002CA28 /* opencl_test_ii */,
+				C74DF0951B9FBD2D0002CA28 /* Frameworks */,
+				C74DF08B1B9FBC7F0002CA28 /* pathtracer */,
 				C74DF08A1B9FBC7F0002CA28 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -49,25 +55,34 @@
 		C74DF08A1B9FBC7F0002CA28 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				C74DF0891B9FBC7F0002CA28 /* opencl_test_ii */,
+				C74DF0891B9FBC7F0002CA28 /* pathtracer */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		C74DF08B1B9FBC7F0002CA28 /* opencl_test_ii */ = {
+		C74DF08B1B9FBC7F0002CA28 /* pathtracer */ = {
 			isa = PBXGroup;
 			children = (
 				C74DF08C1B9FBC7F0002CA28 /* main.cpp */,
+				C78DFD6F1BAF35D700E58B64 /* pathtracer_kernel.cl */,
 			);
-			path = opencl_test_ii;
+			path = pathtracer;
+			sourceTree = "<group>";
+		};
+		C74DF0951B9FBD2D0002CA28 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				C74DF0931B9FBCD80002CA28 /* OpenCL.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		C74DF0881B9FBC7F0002CA28 /* opencl_test_ii */ = {
+		C74DF0881B9FBC7F0002CA28 /* pathtracer */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C74DF0901B9FBC7F0002CA28 /* Build configuration list for PBXNativeTarget "opencl_test_ii" */;
+			buildConfigurationList = C74DF0901B9FBC7F0002CA28 /* Build configuration list for PBXNativeTarget "pathtracer" */;
 			buildPhases = (
 				C74DF0851B9FBC7F0002CA28 /* Sources */,
 				C74DF0861B9FBC7F0002CA28 /* Frameworks */,
@@ -77,9 +92,9 @@
 			);
 			dependencies = (
 			);
-			name = opencl_test_ii;
+			name = pathtracer;
 			productName = opencl_test_ii;
-			productReference = C74DF0891B9FBC7F0002CA28 /* opencl_test_ii */;
+			productReference = C74DF0891B9FBC7F0002CA28 /* pathtracer */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -96,7 +111,7 @@
 					};
 				};
 			};
-			buildConfigurationList = C74DF0841B9FBC7F0002CA28 /* Build configuration list for PBXProject "opencl_test_ii" */;
+			buildConfigurationList = C74DF0841B9FBC7F0002CA28 /* Build configuration list for PBXProject "pathtracer" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -108,7 +123,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				C74DF0881B9FBC7F0002CA28 /* opencl_test_ii */,
+				C74DF0881B9FBC7F0002CA28 /* pathtracer */,
 			);
 		};
 /* End PBXProject section */
@@ -119,6 +134,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C74DF08D1B9FBC7F0002CA28 /* main.cpp in Sources */,
+				C78DFD701BAF35D700E58B64 /* pathtracer_kernel.cl in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -205,21 +221,21 @@
 		C74DF0911B9FBC7F0002CA28 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = pathtracer;
 			};
 			name = Debug;
 		};
 		C74DF0921B9FBC7F0002CA28 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = pathtracer;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		C74DF0841B9FBC7F0002CA28 /* Build configuration list for PBXProject "opencl_test_ii" */ = {
+		C74DF0841B9FBC7F0002CA28 /* Build configuration list for PBXProject "pathtracer" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C74DF08E1B9FBC7F0002CA28 /* Debug */,
@@ -228,13 +244,14 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C74DF0901B9FBC7F0002CA28 /* Build configuration list for PBXNativeTarget "opencl_test_ii" */ = {
+		C74DF0901B9FBC7F0002CA28 /* Build configuration list for PBXNativeTarget "pathtracer" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C74DF0911B9FBC7F0002CA28 /* Debug */,
 				C74DF0921B9FBC7F0002CA28 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

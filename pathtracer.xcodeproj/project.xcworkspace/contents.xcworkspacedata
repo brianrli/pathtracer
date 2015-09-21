@@ -2,6 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:opencl_test_ii.xcodeproj">
+      location = "self:/Users/brianli/Desktop/thesis/opencl_test_ii/pathtracer.xcodeproj">
    </FileRef>
 </Workspace>
