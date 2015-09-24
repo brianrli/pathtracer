@@ -7,9 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C736B9B01BB491E800E25468 /* opencl_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C78DFD731BB0601900E58B64 /* opencl_manager.cpp */; };
+		C736B9B11BB491E800E25468 /* png_writer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C736B9AD1BB3864400E25468 /* png_writer.cpp */; };
+		C736B9B61BB4BB1700E25468 /* pathtracer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C736B9B41BB4BB1700E25468 /* pathtracer.cpp */; };
 		C74DF08D1B9FBC7F0002CA28 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C74DF08C1B9FBC7F0002CA28 /* main.cpp */; };
 		C74DF0941B9FBCD80002CA28 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C74DF0931B9FBCD80002CA28 /* OpenCL.framework */; };
-		C78DFD701BAF35D700E58B64 /* pathtracer_kernel.cl in Sources */ = {isa = PBXBuildFile; fileRef = C78DFD6F1BAF35D700E58B64 /* pathtracer_kernel.cl */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,10 +27,17 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C736B9AD1BB3864400E25468 /* png_writer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = png_writer.cpp; sourceTree = "<group>"; };
+		C736B9AE1BB3864400E25468 /* png_writer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = png_writer.hpp; sourceTree = "<group>"; };
+		C736B9B41BB4BB1700E25468 /* pathtracer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pathtracer.cpp; sourceTree = "<group>"; };
+		C736B9B51BB4BB1700E25468 /* pathtracer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = pathtracer.hpp; sourceTree = "<group>"; };
+		C736B9B71BB4BB2000E25468 /* common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = common.hpp; sourceTree = "<group>"; };
 		C74DF0891B9FBC7F0002CA28 /* pathtracer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = pathtracer; sourceTree = BUILT_PRODUCTS_DIR; };
 		C74DF08C1B9FBC7F0002CA28 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		C74DF0931B9FBCD80002CA28 /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/OpenCL.framework; sourceTree = "<absolute>"; };
 		C78DFD6F1BAF35D700E58B64 /* pathtracer_kernel.cl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.opencl; path = pathtracer_kernel.cl; sourceTree = "<group>"; };
+		C78DFD721BB05FEF00E58B64 /* opencl_manager.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = opencl_manager.hpp; sourceTree = "<group>"; };
+		C78DFD731BB0601900E58B64 /* opencl_manager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = opencl_manager.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,6 +73,13 @@
 			isa = PBXGroup;
 			children = (
 				C74DF08C1B9FBC7F0002CA28 /* main.cpp */,
+				C736B9B71BB4BB2000E25468 /* common.hpp */,
+				C736B9B41BB4BB1700E25468 /* pathtracer.cpp */,
+				C736B9B51BB4BB1700E25468 /* pathtracer.hpp */,
+				C78DFD731BB0601900E58B64 /* opencl_manager.cpp */,
+				C78DFD721BB05FEF00E58B64 /* opencl_manager.hpp */,
+				C736B9AD1BB3864400E25468 /* png_writer.cpp */,
+				C736B9AE1BB3864400E25468 /* png_writer.hpp */,
 				C78DFD6F1BAF35D700E58B64 /* pathtracer_kernel.cl */,
 			);
 			path = pathtracer;
@@ -133,8 +149,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C736B9B01BB491E800E25468 /* opencl_manager.cpp in Sources */,
+				C736B9B61BB4BB1700E25468 /* pathtracer.cpp in Sources */,
+				C736B9B11BB491E800E25468 /* png_writer.cpp in Sources */,
 				C74DF08D1B9FBC7F0002CA28 /* main.cpp in Sources */,
-				C78DFD701BAF35D700E58B64 /* pathtracer_kernel.cl in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -161,6 +179,7 @@
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				"FRAMEWORK_SEARCH_PATHS[arch=*]" = /Users/brianli/Desktop/thesis/pathtracer/frameworks;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -179,6 +198,13 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				"OTHER_CPLUSPLUSFLAGS[arch=*]" = "";
+				OTHER_LDFLAGS = (
+					"-I/usr/local/include/libpng16",
+					"-L/usr/local/lib",
+					"-lpng",
+					"-lz",
+				);
 				SDKROOT = macosx;
 			};
 			name = Debug;
@@ -214,6 +240,12 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_LDFLAGS = (
+					"-I/usr/local/include/libpng16",
+					"-L/usr/local/lib",
+					"-lpng",
+					"-lz",
+				);
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -221,6 +253,15 @@
 		C74DF0911B9FBC7F0002CA28 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/frameworks";
+				OTHER_CPLUSPLUSFLAGS = "";
+				"OTHER_CPLUSPLUSFLAGS[arch=*]" = (
+					"-I/usr/local/include",
+					"-L/usr/local/lib",
+					"-w",
+					"-lz",
+					"-lpng16",
+				);
 				PRODUCT_NAME = pathtracer;
 			};
 			name = Debug;
@@ -228,6 +269,10 @@
 		C74DF0921B9FBC7F0002CA28 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/frameworks",
+				);
 				PRODUCT_NAME = pathtracer;
 			};
 			name = Release;
