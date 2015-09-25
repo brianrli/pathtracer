@@ -5,6 +5,19 @@
 
 int main(int argc, const char * argv[]) {
 
+    // testing
+    int width = 720;
+    int height = 480;
+
+    float camera_x;
+    float camera_y;
+    float camera_z;
+
+    // for each pixel
+        // compute viewing ray
+        // find first object hit by ray and its surface normal n
+        // set pixel color to value based on material, light, and n
+
     //create pathtracer
     Pathtracer pathtracer;
     Pixel pixel;

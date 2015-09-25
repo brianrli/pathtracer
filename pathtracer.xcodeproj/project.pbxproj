@@ -10,6 +10,7 @@
 		C736B9B01BB491E800E25468 /* opencl_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C78DFD731BB0601900E58B64 /* opencl_manager.cpp */; };
 		C736B9B11BB491E800E25468 /* png_writer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C736B9AD1BB3864400E25468 /* png_writer.cpp */; };
 		C736B9B61BB4BB1700E25468 /* pathtracer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C736B9B41BB4BB1700E25468 /* pathtracer.cpp */; };
+		C736B9BA1BB4D04500E25468 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C736B9B91BB4D04500E25468 /* OpenGL.framework */; };
 		C74DF08D1B9FBC7F0002CA28 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C74DF08C1B9FBC7F0002CA28 /* main.cpp */; };
 		C74DF0941B9FBCD80002CA28 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C74DF0931B9FBCD80002CA28 /* OpenCL.framework */; };
 /* End PBXBuildFile section */
@@ -32,6 +33,8 @@
 		C736B9B41BB4BB1700E25468 /* pathtracer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pathtracer.cpp; sourceTree = "<group>"; };
 		C736B9B51BB4BB1700E25468 /* pathtracer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = pathtracer.hpp; sourceTree = "<group>"; };
 		C736B9B71BB4BB2000E25468 /* common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = common.hpp; sourceTree = "<group>"; };
+		C736B9B81BB4CFDC00E25468 /* vecmath */ = {isa = PBXFileReference; lastKnownFileType = folder; path = vecmath; sourceTree = "<group>"; };
+		C736B9B91BB4D04500E25468 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		C74DF0891B9FBC7F0002CA28 /* pathtracer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = pathtracer; sourceTree = BUILT_PRODUCTS_DIR; };
 		C74DF08C1B9FBC7F0002CA28 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		C74DF0931B9FBCD80002CA28 /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/OpenCL.framework; sourceTree = "<absolute>"; };
@@ -45,6 +48,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C736B9BA1BB4D04500E25468 /* OpenGL.framework in Frameworks */,
 				C74DF0941B9FBCD80002CA28 /* OpenCL.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -72,6 +76,7 @@
 		C74DF08B1B9FBC7F0002CA28 /* pathtracer */ = {
 			isa = PBXGroup;
 			children = (
+				C736B9B81BB4CFDC00E25468 /* vecmath */,
 				C74DF08C1B9FBC7F0002CA28 /* main.cpp */,
 				C736B9B71BB4BB2000E25468 /* common.hpp */,
 				C736B9B41BB4BB1700E25468 /* pathtracer.cpp */,
@@ -88,6 +93,7 @@
 		C74DF0951B9FBD2D0002CA28 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C736B9B91BB4D04500E25468 /* OpenGL.framework */,
 				C74DF0931B9FBCD80002CA28 /* OpenCL.framework */,
 			);
 			name = Frameworks;
@@ -179,7 +185,6 @@
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				"FRAMEWORK_SEARCH_PATHS[arch=*]" = /Users/brianli/Desktop/thesis/pathtracer/frameworks;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;

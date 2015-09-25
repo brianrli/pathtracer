@@ -3,6 +3,8 @@
 #define pathtracer_common_h
 
 #include <Opencl/cl.hpp>
+#include "vecmath/mat.h"
+#include "vecmath/vec.h"
 
 typedef unsigned char Color;
 
