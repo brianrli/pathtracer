@@ -11,6 +11,7 @@
 		C736B9B11BB491E800E25468 /* png_writer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C736B9AD1BB3864400E25468 /* png_writer.cpp */; };
 		C736B9B61BB4BB1700E25468 /* pathtracer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C736B9B41BB4BB1700E25468 /* pathtracer.cpp */; };
 		C736B9BA1BB4D04500E25468 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C736B9B91BB4D04500E25468 /* OpenGL.framework */; };
+		C745117E1BB9E99500CF4C3D /* boost.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C745117D1BB9E99500CF4C3D /* boost.framework */; };
 		C74DF08D1B9FBC7F0002CA28 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C74DF08C1B9FBC7F0002CA28 /* main.cpp */; };
 		C74DF0941B9FBCD80002CA28 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C74DF0931B9FBCD80002CA28 /* OpenCL.framework */; };
 /* End PBXBuildFile section */
@@ -35,6 +36,7 @@
 		C736B9B71BB4BB2000E25468 /* common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = common.hpp; sourceTree = "<group>"; };
 		C736B9B81BB4CFDC00E25468 /* vecmath */ = {isa = PBXFileReference; lastKnownFileType = folder; path = vecmath; sourceTree = "<group>"; };
 		C736B9B91BB4D04500E25468 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		C745117D1BB9E99500CF4C3D /* boost.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = boost.framework; path = "../7513324-a840fee893331ab946ea031bb3c6049a1a71b26d/osx/framework/boost.framework"; sourceTree = "<group>"; };
 		C74DF0891B9FBC7F0002CA28 /* pathtracer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = pathtracer; sourceTree = BUILT_PRODUCTS_DIR; };
 		C74DF08C1B9FBC7F0002CA28 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		C74DF0931B9FBCD80002CA28 /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/OpenCL.framework; sourceTree = "<absolute>"; };
@@ -48,6 +50,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C745117E1BB9E99500CF4C3D /* boost.framework in Frameworks */,
 				C736B9BA1BB4D04500E25468 /* OpenGL.framework in Frameworks */,
 				C74DF0941B9FBCD80002CA28 /* OpenCL.framework in Frameworks */,
 			);
@@ -93,6 +96,7 @@
 		C74DF0951B9FBD2D0002CA28 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C745117D1BB9E99500CF4C3D /* boost.framework */,
 				C736B9B91BB4D04500E25468 /* OpenGL.framework */,
 				C74DF0931B9FBCD80002CA28 /* OpenCL.framework */,
 			);
@@ -168,7 +172,7 @@
 		C74DF08E1B9FBC7F0002CA28 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
@@ -200,10 +204,15 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"/Users/brianli/Desktop/thesis/pathtracer/pathtracer/boost/**",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				"OTHER_CPLUSPLUSFLAGS[arch=*]" = "";
+				"OTHER_CPLUSPLUSFLAGS[arch=*]" = "$(OTHER_CFLAGS)";
 				OTHER_LDFLAGS = (
 					"-I/usr/local/include/libpng16",
 					"-L/usr/local/lib",
@@ -211,13 +220,14 @@
 					"-lz",
 				);
 				SDKROOT = macosx;
+				"USER_HEADER_SEARCH_PATHS[arch=*]" = "/Users/brianli/Desktop/thesis/pathtracer/pathtracer/boost/**";
 			};
 			name = Debug;
 		};
 		C74DF08F1B9FBC7F0002CA28 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
@@ -243,6 +253,11 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"/Users/brianli/Desktop/thesis/pathtracer/pathtracer/boost/**",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_LDFLAGS = (
@@ -258,7 +273,14 @@
 		C74DF0911B9FBC7F0002CA28 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/frameworks";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/frameworks",
+					"/Users/brianli/Desktop/thesis/7513324-a840fee893331ab946ea031bb3c6049a1a71b26d/osx/framework",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+				);
 				OTHER_CPLUSPLUSFLAGS = "";
 				"OTHER_CPLUSPLUSFLAGS[arch=*]" = (
 					"-I/usr/local/include",
@@ -267,7 +289,17 @@
 					"-lz",
 					"-lpng16",
 				);
+				OTHER_LDFLAGS = (
+					"-I/usr/local/include/libpng16",
+					"-L/usr/local/lib",
+					"-lpng",
+					"-lz",
+					"-I/usr/local/include/boost",
+				);
 				PRODUCT_NAME = pathtracer;
+				SCAN_ALL_SOURCE_FILES_FOR_INCLUDES = YES;
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/include/boost/**";
+				"USER_HEADER_SEARCH_PATHS[arch=*]" = "";
 			};
 			name = Debug;
 		};
@@ -277,8 +309,21 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/frameworks",
+					"/Users/brianli/Desktop/thesis/7513324-a840fee893331ab946ea031bb3c6049a1a71b26d/osx/framework",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+				);
+				OTHER_LDFLAGS = (
+					"-I/usr/local/include/libpng16",
+					"-L/usr/local/lib",
+					"-lpng",
+					"-lz",
+					"-I/usr/local/include/boost",
 				);
 				PRODUCT_NAME = pathtracer;
+				SCAN_ALL_SOURCE_FILES_FOR_INCLUDES = YES;
 			};
 			name = Release;
 		};

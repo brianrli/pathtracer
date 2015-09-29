@@ -1,7 +1,42 @@
 #include <vector>
+#include <string>
 #include <iostream>
 #include <fstream>
 #include "opencl_manager.hpp"
+
+// helpers
+void clcheck(cl_int status, std::string str) {
+    if (status != CL_SUCCESS) {
+        switch (status) {
+            case CL_INVALID_CONTEXT: {
+                std::cout << "Invalid Context ";
+                break; }
+            case CL_INVALID_VALUE: {
+                std::cout << "Invalid Value ";
+                break; }
+            case CL_INVALID_EVENT_WAIT_LIST: {
+                std::cout << "Invalid Event Wait List ";
+                break; }
+            case CL_MISALIGNED_SUB_BUFFER_OFFSET: {
+                std::cout << "Misaligned Sub Buffer Offset ";
+                break; }
+            case CL_MEM_OBJECT_ALLOCATION_FAILURE: {
+                std::cout << "Memory Object Allocation Failure ";
+                break; }
+            case CL_OUT_OF_RESOURCES: {
+                std::cout << "Out of Resources ";
+                break; }
+            case CL_OUT_OF_HOST_MEMORY: {
+                std::cout << "Out of Host Memory ";
+                break; }
+            case CL_INVALID_MEM_OBJECT: {
+                std::cout << "Invalid Mem Object ";
+                break; }
+        }
+        std::cout << "Error: ";
+        std::cout << str << std::endl;
+    }
+}
 
 // constructor
 OpenCL_Manager::OpenCL_Manager() {
@@ -37,7 +72,7 @@ int OpenCL_Manager::initialize() {
     return 0;
 }
     
-int OpenCL_Manager::load_kernel(std::string file_name,
+int OpenCL_Manager::kernel_load(std::string file_name,
     std::string kernel_name) {
     
     // setup program
@@ -54,7 +89,9 @@ int OpenCL_Manager::load_kernel(std::string file_name,
     m_program = cl::Program(m_context,source,true);
     
     if(m_program.build({m_device})!=CL_SUCCESS) {
-        std::cout << "Error building." << std::endl;
+        std::cout << "Build Status: " << m_program.getBuildInfo<CL_PROGRAM_BUILD_STATUS>({m_device}) << std::endl;
+        std::cout << "Build Options:\t" << m_program.getBuildInfo<CL_PROGRAM_BUILD_OPTIONS>({m_device}) << std::endl;
+        std::cout << "Build Log:\t " << m_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>({m_device}) << std::endl;
         exit(1);
     }
 
@@ -65,42 +102,52 @@ int OpenCL_Manager::load_kernel(std::string file_name,
 }
     
 
-int OpenCL_Manager::execute_kernel() {
+int OpenCL_Manager::kernel_execute(Primitive *primitives, Camera *camera, int n_primitives,
+                                   Pixel *image, int width, int height) {
+    
     
     // setup data & buffers
-    float mat[16], vec[4], result[4];
-    
-    for (int i=0; i<16; i++) {
-        mat[i] = i;
-    }
-    
-    for (int i=0; i<4; i++) {
-        vec[i] = i * 3.0f;
-    }
-    
-    cl::Buffer mat_buff(m_context,CL_MEM_READ_WRITE,sizeof(float)*16);
-    cl::Buffer vec_buff(m_context,CL_MEM_READ_WRITE,sizeof(float)*4);
-    cl::Buffer res_buff(m_context,CL_MEM_READ_WRITE,sizeof(float)*4);
+    cl::Buffer prim_buff(m_context,CL_MEM_READ_WRITE,sizeof(Primitive)*n_primitives);
+    cl::Buffer nprim_buff(m_context,CL_MEM_READ_ONLY,sizeof(int));
+    cl::Buffer camera_buff(m_context,CL_MEM_READ_ONLY,sizeof(Camera));
+    cl::Buffer image_buff(m_context,CL_MEM_WRITE_ONLY,sizeof(Pixel)*width*height);
     
     // create command queue
     m_queue = cl::CommandQueue(m_context,m_device);
     
     // set kernel arguments
-    m_queue.enqueueWriteBuffer(mat_buff,CL_TRUE,0,sizeof(float)*16,mat);
-    m_queue.enqueueWriteBuffer(vec_buff,CL_TRUE,0,sizeof(float)*4,vec);
+    clcheck(m_queue.enqueueWriteBuffer(prim_buff,CL_TRUE,0,sizeof(Primitive)*n_primitives, primitives),
+          "prim_buff write");
     
-    m_kernel.setArg(0,mat_buff);
-    m_kernel.setArg(1,vec_buff);
-    m_kernel.setArg(2,res_buff);
+    std::cout << sizeof(cl_uint) << std::endl;
+    std::cout << sizeof(int) << std::endl;
+    std::cout << sizeof(Primitive)*n_primitives << std::endl;
+    std::cout << sizeof(primitives) << std::endl;
+
+    clcheck(m_queue.enqueueWriteBuffer(nprim_buff,CL_TRUE,0,sizeof(cl_uint),&n_primitives),
+          "nprim_buff write");
+    clcheck(m_queue.enqueueWriteBuffer(camera_buff,CL_TRUE,0,sizeof(Camera),camera),
+          "camera_buff write");
+    clcheck(m_queue.enqueueWriteBuffer(image_buff, CL_TRUE, 0, sizeof(Pixel)*width*height, image),
+          "image_buff write");
+
+    
+    clcheck(m_kernel.setArg(0,prim_buff),"set prim_buff");
+    clcheck(m_kernel.setArg(1,nprim_buff),"set nprim_buff");
+    clcheck(m_kernel.setArg(2,camera_buff),"set camera_buff");
+    clcheck(m_kernel.setArg(3,image_buff),"set image_buff");
+    
+    int size = width*height;
+    size = 1;
     
     m_queue.enqueueNDRangeKernel(m_kernel, // kernel
                                cl::NullRange, // offset
-                               cl::NDRange(4), // global work size
+                               cl::NDRange(size), // global work size
                                cl::NullRange); // local work size
     
     // blocks program until done
     m_queue.finish();
-    m_queue.enqueueReadBuffer(res_buff,CL_TRUE,0,sizeof(float)*4,result);
+    m_queue.enqueueReadBuffer(image_buff,CL_TRUE,0,sizeof(Pixel)*width*height,image);
         
     return 0;
 }

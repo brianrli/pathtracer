@@ -2,15 +2,21 @@
 #define pathtracer_pathtracer_opencl_h
 
 #include <Opencl/cl.hpp>
+#include "common.hpp"
 
 class OpenCL_Manager {
     
 public:
+    // constructor
     OpenCL_Manager();
+
     int initialize();
-    int load_kernel(std::string file_name,
+    
+    int kernel_load(std::string file_name,
                     std::string kernel_name);
-    int execute_kernel();
+    
+    int kernel_execute(Primitive *primitives, Camera *camera, int n_primitives,
+                       Pixel *image, int width, int height);
     
 private:
     cl::Platform m_platform;

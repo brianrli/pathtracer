@@ -352,6 +352,9 @@ public:
 		double len = length();
 		n[0] /= len; n[1] /= len; n[2] /= len; n[3] /= len;
 	}
+    
+    //--[ Print Methods ]------------------------
+    void print() const {std::cout << n[0] << " " << n[1] << " " << n[2] << " " << n[3] << "\n";}
 };
 
 typedef Vec4<int> Vec4i;

@@ -5,6 +5,7 @@
 #include <Opencl/cl.hpp>
 #include "vecmath/mat.h"
 #include "vecmath/vec.h"
+#include <boost/compute.hpp>
 
 typedef unsigned char Color;
 
@@ -20,10 +21,19 @@ struct Bitmap {
     int height;
 };
 
+// cl struct prototypes
 struct Primitive {
     cl_float4 center;
-    cl_float origin;
     cl_float3 padding;
+    cl_float radius;
 };
+
+struct Camera {
+    cl_float4 eye;
+    cl_float4 n;
+    cl_float4 u;
+    cl_float4 v;
+};
+
 
 #endif
