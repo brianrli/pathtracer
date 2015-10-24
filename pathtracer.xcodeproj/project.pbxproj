@@ -7,13 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C736B9B01BB491E800E25468 /* opencl_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C78DFD731BB0601900E58B64 /* opencl_manager.cpp */; };
-		C736B9B11BB491E800E25468 /* png_writer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C736B9AD1BB3864400E25468 /* png_writer.cpp */; };
-		C736B9B61BB4BB1700E25468 /* pathtracer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C736B9B41BB4BB1700E25468 /* pathtracer.cpp */; };
 		C736B9BA1BB4D04500E25468 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C736B9B91BB4D04500E25468 /* OpenGL.framework */; };
 		C745117E1BB9E99500CF4C3D /* boost.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C745117D1BB9E99500CF4C3D /* boost.framework */; };
 		C74DF08D1B9FBC7F0002CA28 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C74DF08C1B9FBC7F0002CA28 /* main.cpp */; };
 		C74DF0941B9FBCD80002CA28 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C74DF0931B9FBCD80002CA28 /* OpenCL.framework */; };
+		C7AFA2B31BCDD419003A5C5D /* common.hpp in Sources */ = {isa = PBXBuildFile; fileRef = C736B9B71BB4BB2000E25468 /* common.hpp */; };
+		C7AFA2B41BCDD419003A5C5D /* pathtracer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C736B9B41BB4BB1700E25468 /* pathtracer.cpp */; };
+		C7AFA2B51BCDD419003A5C5D /* opencl_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C78DFD731BB0601900E58B64 /* opencl_manager.cpp */; };
+		C7AFA2B61BCDD419003A5C5D /* png_writer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C736B9AD1BB3864400E25468 /* png_writer.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -159,9 +160,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C736B9B01BB491E800E25468 /* opencl_manager.cpp in Sources */,
-				C736B9B61BB4BB1700E25468 /* pathtracer.cpp in Sources */,
-				C736B9B11BB491E800E25468 /* png_writer.cpp in Sources */,
+				C7AFA2B31BCDD419003A5C5D /* common.hpp in Sources */,
+				C7AFA2B41BCDD419003A5C5D /* pathtracer.cpp in Sources */,
+				C7AFA2B51BCDD419003A5C5D /* opencl_manager.cpp in Sources */,
+				C7AFA2B61BCDD419003A5C5D /* png_writer.cpp in Sources */,
 				C74DF08D1B9FBC7F0002CA28 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

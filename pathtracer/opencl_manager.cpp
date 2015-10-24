@@ -106,11 +106,25 @@ int OpenCL_Manager::kernel_execute(Primitive *primitives, Camera *camera, int n_
                                    Pixel *image, int width, int height) {
     
     
-    // setup data & buffers
+    //limits
+    size_t maxWorkGrpSize = 5;
+    std::vector<size_t> workItemSizes;
+    
+     clcheck(m_device.getInfo<size_t>(CL_DEVICE_MAX_WORK_GROUP_SIZE, &maxWorkGrpSize),
+             "Max Work Group Size Query");
+    m_device.getInfo<std::vector<size_t> >(CL_DEVICE_MAX_WORK_ITEM_SIZES, &workItemSizes);
+
+    // input
+    std::cout << "Max Work Group Size: " << maxWorkGrpSize << std::endl;
+    std::cout << "Max Work Item Size" << workItemSizes[0] << std::endl;
+    
+    // setup data & buffers & local args
     cl::Buffer prim_buff(m_context,CL_MEM_READ_WRITE,sizeof(Primitive)*n_primitives);
     cl::Buffer nprim_buff(m_context,CL_MEM_READ_ONLY,sizeof(int));
     cl::Buffer camera_buff(m_context,CL_MEM_READ_ONLY,sizeof(Camera));
     cl::Buffer image_buff(m_context,CL_MEM_WRITE_ONLY,sizeof(Pixel)*width*height);
+
+    cl::LocalSpaceArg local_prim_buff = cl::Local(sizeof(Primitive)*n_primitives);
     
     // create command queue
     m_queue = cl::CommandQueue(m_context,m_device);
@@ -118,36 +132,41 @@ int OpenCL_Manager::kernel_execute(Primitive *primitives, Camera *camera, int n_
     // set kernel arguments
     clcheck(m_queue.enqueueWriteBuffer(prim_buff,CL_TRUE,0,sizeof(Primitive)*n_primitives, primitives),
           "prim_buff write");
-    
-    std::cout << sizeof(cl_uint) << std::endl;
-    std::cout << sizeof(int) << std::endl;
-    std::cout << sizeof(Primitive)*n_primitives << std::endl;
-    std::cout << sizeof(primitives) << std::endl;
-
-    clcheck(m_queue.enqueueWriteBuffer(nprim_buff,CL_TRUE,0,sizeof(cl_uint),&n_primitives),
-          "nprim_buff write");
     clcheck(m_queue.enqueueWriteBuffer(camera_buff,CL_TRUE,0,sizeof(Camera),camera),
           "camera_buff write");
     clcheck(m_queue.enqueueWriteBuffer(image_buff, CL_TRUE, 0, sizeof(Pixel)*width*height, image),
           "image_buff write");
-
     
     clcheck(m_kernel.setArg(0,prim_buff),"set prim_buff");
-    clcheck(m_kernel.setArg(1,nprim_buff),"set nprim_buff");
+    clcheck(m_kernel.setArg(1,n_primitives),"set nprim_buff"); // scalar
     clcheck(m_kernel.setArg(2,camera_buff),"set camera_buff");
-    clcheck(m_kernel.setArg(3,image_buff),"set image_buff");
+    clcheck(m_kernel.setArg(3,width),"set width"); // scalar
+    clcheck(m_kernel.setArg(4,height),"set height"); // scalar
+    clcheck(m_kernel.setArg(5,image_buff),"set image_buff");
+    clcheck(m_kernel.setArg(6,local_prim_buff),"set local primitives"); //local
     
-    int size = width*height;
-    size = 1;
+    int global_size, size = width*height;
     
-    m_queue.enqueueNDRangeKernel(m_kernel, // kernel
-                               cl::NullRange, // offset
-                               cl::NDRange(size), // global work size
-                               cl::NullRange); // local work size
+    // global work size must be evenly divisible by work item size
+    if (size % workItemSizes[0] != 0) {
+        global_size = (size/workItemSizes[0]) * workItemSizes[0]
+        + workItemSizes[0];
+    }
+    else {
+        global_size = size;
+    }
+    
+    
+    // offset, global work size, local work size
+    clcheck(m_queue.enqueueNDRangeKernel(m_kernel,
+                                      cl::NullRange,
+                                      cl::NDRange(global_size),
+                                      cl::NDRange(workItemSizes[0])),
+            "enqueueNDRangeKernel");
     
     // blocks program until done
     m_queue.finish();
     m_queue.enqueueReadBuffer(image_buff,CL_TRUE,0,sizeof(Pixel)*width*height,image);
-        
+    
     return 0;
 }
