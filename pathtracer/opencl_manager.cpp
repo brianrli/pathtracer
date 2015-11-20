@@ -103,7 +103,7 @@ int OpenCL_Manager::kernel_load(std::string file_name,
     
 
 int OpenCL_Manager::kernel_execute(Primitive *primitives, Camera *camera, int n_primitives,
-                                   Pixel *image, int width, int height) {
+                                   Pixel *image, int width, int height, int* seed_memory) {
     
     
     //limits
@@ -116,13 +116,15 @@ int OpenCL_Manager::kernel_execute(Primitive *primitives, Camera *camera, int n_
 
     // input
     std::cout << "Max Work Group Size: " << maxWorkGrpSize << std::endl;
-    std::cout << "Max Work Item Size" << workItemSizes[0] << std::endl;
+    std::cout << "Max Work Item Size: " << workItemSizes[0] << std::endl;
     
     // setup data & buffers & local args
     cl::Buffer prim_buff(m_context,CL_MEM_READ_WRITE,sizeof(Primitive)*n_primitives);
     cl::Buffer nprim_buff(m_context,CL_MEM_READ_ONLY,sizeof(int));
     cl::Buffer camera_buff(m_context,CL_MEM_READ_ONLY,sizeof(Camera));
     cl::Buffer image_buff(m_context,CL_MEM_WRITE_ONLY,sizeof(Pixel)*width*height);
+
+    cl::Buffer seed_memory_buff(m_context,CL_MEM_READ_WRITE,sizeof(int)*width*height);
 
     cl::LocalSpaceArg local_prim_buff = cl::Local(sizeof(Primitive)*n_primitives);
     
@@ -136,6 +138,7 @@ int OpenCL_Manager::kernel_execute(Primitive *primitives, Camera *camera, int n_
           "camera_buff write");
     clcheck(m_queue.enqueueWriteBuffer(image_buff, CL_TRUE, 0, sizeof(Pixel)*width*height, image),
           "image_buff write");
+    clcheck(m_queue.enqueueWriteBuffer(seed_memory_buff, CL_TRUE, 0, sizeof(int)*width*height, seed_memory),"seed_memory_buff write");
     
     clcheck(m_kernel.setArg(0,prim_buff),"set prim_buff");
     clcheck(m_kernel.setArg(1,n_primitives),"set nprim_buff"); // scalar
@@ -144,6 +147,7 @@ int OpenCL_Manager::kernel_execute(Primitive *primitives, Camera *camera, int n_
     clcheck(m_kernel.setArg(4,height),"set height"); // scalar
     clcheck(m_kernel.setArg(5,image_buff),"set image_buff");
     clcheck(m_kernel.setArg(6,local_prim_buff),"set local primitives"); //local
+    clcheck(m_kernel.setArg(7,seed_memory_buff),"set seed memory");
     
     int global_size, size = width*height;
     
@@ -167,6 +171,7 @@ int OpenCL_Manager::kernel_execute(Primitive *primitives, Camera *camera, int n_
     // blocks program until done
     m_queue.finish();
     m_queue.enqueueReadBuffer(image_buff,CL_TRUE,0,sizeof(Pixel)*width*height,image);
+    m_queue.enqueueReadBuffer(seed_memory_buff,CL_TRUE,0,sizeof(int)*width*height,seed_memory);
     
     return 0;
 }

@@ -16,7 +16,7 @@ public:
                     std::string kernel_name);
     
     int kernel_execute(Primitive *primitives, Camera *camera, int n_primitives,
-                       Pixel *image, int width, int height);
+                       Pixel *image, int width, int height, int *seed_memory);
     
 private:
     cl::Platform m_platform;

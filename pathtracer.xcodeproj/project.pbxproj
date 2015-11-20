@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		C736B9BA1BB4D04500E25468 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C736B9B91BB4D04500E25468 /* OpenGL.framework */; };
 		C745117E1BB9E99500CF4C3D /* boost.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C745117D1BB9E99500CF4C3D /* boost.framework */; };
+		C74D640F1BF3922C00ED2A10 /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C74D640E1BF3922C00ED2A10 /* GLUT.framework */; };
 		C74DF08D1B9FBC7F0002CA28 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C74DF08C1B9FBC7F0002CA28 /* main.cpp */; };
 		C74DF0941B9FBCD80002CA28 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C74DF0931B9FBCD80002CA28 /* OpenCL.framework */; };
 		C7AFA2B31BCDD419003A5C5D /* common.hpp in Sources */ = {isa = PBXBuildFile; fileRef = C736B9B71BB4BB2000E25468 /* common.hpp */; };
@@ -38,6 +39,7 @@
 		C736B9B81BB4CFDC00E25468 /* vecmath */ = {isa = PBXFileReference; lastKnownFileType = folder; path = vecmath; sourceTree = "<group>"; };
 		C736B9B91BB4D04500E25468 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		C745117D1BB9E99500CF4C3D /* boost.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = boost.framework; path = "../7513324-a840fee893331ab946ea031bb3c6049a1a71b26d/osx/framework/boost.framework"; sourceTree = "<group>"; };
+		C74D640E1BF3922C00ED2A10 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
 		C74DF0891B9FBC7F0002CA28 /* pathtracer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = pathtracer; sourceTree = BUILT_PRODUCTS_DIR; };
 		C74DF08C1B9FBC7F0002CA28 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		C74DF0931B9FBCD80002CA28 /* OpenCL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenCL.framework; path = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/OpenCL.framework; sourceTree = "<absolute>"; };
@@ -51,6 +53,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C74D640F1BF3922C00ED2A10 /* GLUT.framework in Frameworks */,
 				C745117E1BB9E99500CF4C3D /* boost.framework in Frameworks */,
 				C736B9BA1BB4D04500E25468 /* OpenGL.framework in Frameworks */,
 				C74DF0941B9FBCD80002CA28 /* OpenCL.framework in Frameworks */,
@@ -97,6 +100,7 @@
 		C74DF0951B9FBD2D0002CA28 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C74D640E1BF3922C00ED2A10 /* GLUT.framework */,
 				C745117D1BB9E99500CF4C3D /* boost.framework */,
 				C736B9B91BB4D04500E25468 /* OpenGL.framework */,
 				C74DF0931B9FBCD80002CA28 /* OpenCL.framework */,
