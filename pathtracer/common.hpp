@@ -42,5 +42,4 @@ struct Camera {
     cl_float4 v;
 };
 
-
 #endif

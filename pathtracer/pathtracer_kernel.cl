@@ -5,9 +5,10 @@
 typedef float4 Vector;
 
 // Constants
-__constant int MAXDEPTH = 5;
-__constant int SHADOWDEPTH = 2;
-__constant Vector BACKGROUND_COLOR = {0.95f,0.95f,0.95f,1.0f};
+__constant int MAXDEPTH = 8;
+__constant float ONE_THIRD_RT = 0.57735026919f;
+__constant Vector BACKGROUND_COLOR = {0.5f,0.5f,0.5f,0.0f};
+
 
 void print_vec(Vector vec);
 void print_vec2(Vector vec, Vector vec1);
@@ -159,7 +160,9 @@ bool isreflective(Primitive p);
 bool isrefractive(Primitive p);
     
 bool islight(Primitive p){
-    return (p.emissive.s3 == 1) ? true : false;
+    return (p.emissive.s1 > 0 ||
+            p.emissive.s2 > 0 ||
+            p.emissive.s3 > 0) ? true : false;
 }
 
 bool isreflective(Primitive p){
@@ -171,25 +174,49 @@ bool isrefractive(Primitive p){
 }
 
 // ===[ Monte Carlo ]===
-int rand(int* seed);
-int rand(int* seed) // 1 <= *seed < m
+float rand(int* seed);
+float rand(int* seed) // 1 <= *seed < m
 {
     int const a = 16807; //ie 7**5
     int const m = 2147483647; //ie 2**31-1
     *seed = (unsigned long)(*seed * a) % m;
-    return (*seed);
+    return (float)(*seed)/(float)m;
 }
 
-Vector randomSampleHemisphere(float u1, float u2, Vector normal);
-Vector randomSampleHemisphere(float u1, float u2, Vector normal) {
-//    float r = sqrt(u1);
-//    float theta = 2 * PI * u2;
-//    
-//    float x = r * cos(theta);
-//    float y = r * cos(theta);
-//    
+Vector randomSampleHemisphere(Vector normal, int *seed);
+Vector randomSampleHemisphere(Vector normal, int *seed) {
+
+    // uniformly sample unit sphere
+    float z = rand(seed);
+    float r2 = rand(seed);
     
-}
+    // pythagorean
+    float r = sqrt(1.0f - z * z);
+    float phi = 2 * M_PI_F * r2;
+    
+    float x = cos(phi) * r;
+    float y = sin(phi) * r;
+    
+    //x y z coordinates
+    Vector most_perpendicular;
+    
+    if(fabs(normal.x) < ONE_THIRD_RT) {
+        most_perpendicular = (float4) {1,0,0,0};
+    }
+    else if(fabs(normal.y) < ONE_THIRD_RT) {
+        most_perpendicular = (float4) {0,1,0,0};
+    }
+    else {
+        most_perpendicular = (float4) {0,0,1,0};
+    }
+    
+    Vector u = normalize(cross(most_perpendicular,normal));
+    Vector v = cross(normal, u);
+    
+//    print_vec2(normal, u*x + v*y + normal*z);
+
+    return (u*x + v*y + normal*z);
+ }
 
     
 // ===[ Intersect Information ]===
@@ -300,6 +327,14 @@ bool intersect(Ray *r,local Primitive *p, float *t, Isect *isect) {
     return false;
 }
 
+// [ Diffuse ]
+Ray handle_diffuse(Isect isect, Ray r, int *seed) {
+    Ray new_ray = create_ray(r.depth+1,PRIMARY);
+    new_ray.direction = randomSampleHemisphere(isect.normal,seed);
+    new_ray.origin = isect.point + (EPSILON * new_ray.direction);
+    return new_ray;
+}
+
 // [ Reflective ]
 Ray handle_reflective(Isect isect, Ray r);
 Ray handle_reflective(Isect isect, Ray r) {
@@ -310,6 +345,8 @@ Ray handle_reflective(Isect isect, Ray r) {
                                   (2 * dot(isect.normal,r.direction) * isect.normal));
     
     new_ray.origin = isect.point + (EPSILON * new_ray.direction);
+    
+    return new_ray;
 }
 
 // [ Refractive ]
@@ -321,7 +358,7 @@ Vector refract(Vector D, Vector N, float index){
     //index = n/n_t
     float a = 1-(pow(index,2)*(1-pow(dot(D,N),2)));
 
-    if(a<0.0){
+    if(a < 0.0f){
         return t;
     }
     
@@ -371,21 +408,23 @@ Ray handle_refractive(Isect isect, Ray r) {
 
 // render loop
 //Vector pathtrace(Ray ray,global Primitive *primitives, int n_primitives) {
-Vector pathtrace(Ray ray,local Primitive *primitives, int n_primitives, float random_n);
-Vector pathtrace(Ray ray,local Primitive *primitives, int n_primitives, float random_n) {
+Vector pathtrace(Ray ray,local Primitive *primitives, int n_primitives, int *seed);
+Vector pathtrace(Ray ray,local Primitive *primitives, int n_primitives, int *seed) {
     
     //create ray queue
     Queue ray_queue = create_queue(ray);
 
     // intersection
     Vector color = {0.0f,0.0f,0.0f,0.0f};
+    Vector weight = {1.0f,1.0f,1.0f,0.0f};
+    
     Isect isect;
     bool return_background = true;
     
     int depth = 0;
 
     while(!empty(&ray_queue)) {
-
+    
         Vector contribution = {0.0f,0.0f,0.0f,0.0f};
         
         float t = 1000;
@@ -398,115 +437,41 @@ Vector pathtrace(Ray ray,local Primitive *primitives, int n_primitives, float ra
             break;
         }
         
-        // loop through primitives
+        // Step 2. trace ray to find point of intersection
+        // with the nearest surface
         for(int i = 0; i < n_primitives; i++) {
-            
-            // if the primitive is not a light
-            if (!islight(primitives[i])) {
-
-                // if there is an intersection
-                if(intersect(&r,&(primitives[i]),&t,&isect)) {
-                    
-                    isect.id = i;
-                    found_intersect = true;
-                    return_background = false;
-                }
+            // if there is an intersection
+            if(intersect(&r,&(primitives[i]),&t,&isect)) {
+                isect.id = i;
+                found_intersect = true;
+                return_background = false;
             }
         }
         
-        // loop through lights and shadow rays
+        //
         if (found_intersect) {
             
-            // =====[ Reflective Rays ]=====
-            //queue new reflective ray
-            if (isreflective(*isect.primitive)) {
-                push_back(&ray_queue,handle_reflective(isect,r));
+            // =====[ Emission ]=====
+            if(islight(*isect.primitive)) {
+               color += weight * (*isect.primitive).emissive;
             }
-            
-            //  =====[ Refractive Rays ]=====
-            //queue new refractive ray (Snell)
-            if  (isrefractive(*isect.primitive)) {
-                push_back(&ray_queue,handle_refractive(isect,r));
-            }
-            
-            // =====[ Refractive Rays ]=====
-            for(int j = 0; j < n_primitives; j++) {
-                
-                if(islight(primitives[j])) {
-                
-                    bool occluded = false;
-                    
-                    float shadow_t = length(primitives[j].center - isect.point);
-                    
-                    Ray shadow_ray = create_ray(0,SHADOW);
-                    shadow_ray.origin = isect.point;
-                    shadow_ray.direction = normalize(primitives[j].center - isect.point);
-                    
-                    for(int w = 0; w < n_primitives; w++) {
-                        if(w != j && w != isect.id && !islight(primitives[w])) {
-                            // fire shadow ray
-                            if(intersect(&shadow_ray,&(primitives[w]),&shadow_t,0)) {
-                                occluded = true;
-                                break;
-                            }
-                        }
-                    }
-                    
-                    
-                    // =====[ Shading ]=====
-                    if (!occluded) {
-                        
-                        Vector to_light = normalize(primitives[j].center - isect.point);
-                        
-                        // hard coded
-//                        if((*isect.primitive).type.x == 1.0) {
-//                            contribution += 0.5 * (*isect.primitive).diffuse;
-//                        }
-
-                        
-                        // Diffuse
-                        float k = dot(to_light,isect.normal);
-                        if (k > 0.0f) {
-                            contribution += k * primitives[j].emissive.x *
-                            (*isect.primitive).diffuse;
-                        }
-                        
-                        // Blinn-Phong Specular
-                        Vector view = -r.direction;
-                        Vector h = normalize(view + to_light);
-                        float k1 = dot(isect.normal,h);
-
-                        if (k1 > 0.0f) {
-                            contribution += pow(k1,(*isect.primitive).specular.w)
-                            * primitives[j].emissive.x *
-                            (*isect.primitive).specular;
-
-                        }
-                    }
-
-                    //
-                }
-            }
-            
-        }
-
-        if(r.type == REFRACTIVE) {
-            color += r.transparency*contribution;
-
-            if(!found_intersect)
-                color += BACKGROUND_COLOR;
+           else {
+               // =====[ Shading ]=====
+               Ray new_ray = handle_diffuse(isect,r,seed);
+               weight *= 2.0f * (*isect.primitive).diffuse * dot(isect.normal,new_ray.direction);
+               push_back(&ray_queue,new_ray);
+               
+           }
         }
         else {
-            color += contribution;
+            color+= weight * BACKGROUND_COLOR;
+            break;
         }
-
+    
         pop_front(&ray_queue);
     }
 
-    if (return_background) color = BACKGROUND_COLOR;
-    
-//    print_vec(color);
-    return clamp(color,0.0f,1.0f);
+    return color;
 }
 
 // main pathtracing kernel
@@ -543,29 +508,25 @@ __kernel void pathtracer_kernel(const __global float4* global_primitives,
     // pnrg
     // http://www0.cs.ucl.ac.uk/staff/ucacbbl/ftp/papers/langdon_2009_CIGPU.pdf
     int seed = seed_memory[gid];
-
-    int new_seed = rand(&seed);
-    float rn1 = (float)new_seed/2147483647;
-    
-    new_seed = rand(&new_seed);
-    float rn2 = (float)new_seed/2147483647;
-
-    seed_memory[gid] = new_seed;
     
     // calculate pixel coordinates
-    // TODO: add jittering / supersampling
     float x = fmod((float)gid,(float)width);
     float y = gid / (float)width;
     
-    x = x/(float)width - 0.5f;
-    y = y/(float)height - 0.5f;
+    float inv_w = 1/(float)width;
+    float inv_h = 1/(float)height;
+    
+    // slight jitter
+    x = (x/(float)width) - 0.5f + ((rand(&seed)-0.5) * 1/(float)width);
+    y = (y/(float)height) - 0.5f + ((rand(&seed)-0.5) * 1/(float)height);
     
     ray.origin = camera->eye;
     ray.direction = normalize((x * camera->u) + (y * camera->v) + -(camera->n));
     
     // ray trace
-    color = pathtrace(ray,primitives,n_primitives, rn1);
+    color = pathtrace(ray,primitives,n_primitives, &seed);
     setPixel(&pixel,color);
- 
+    
+    seed_memory[gid] = seed;
     image[gid] = pixel;
 }

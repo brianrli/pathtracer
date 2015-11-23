@@ -20,10 +20,13 @@ private:
     
     int width;
     int height;
+    
+    int iterations;
 
 public:
     Pathtracer();
 
+    // setters
     // use fake scene for now
     int set_scene();
     int set_camera();
@@ -34,5 +37,4 @@ public:
     int get_height();
 };
 
-#endif 
-/* defined(__pathtracer__pathtracer__) */
+#endif

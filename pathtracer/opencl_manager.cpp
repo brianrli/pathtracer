@@ -115,8 +115,8 @@ int OpenCL_Manager::kernel_execute(Primitive *primitives, Camera *camera, int n_
     m_device.getInfo<std::vector<size_t> >(CL_DEVICE_MAX_WORK_ITEM_SIZES, &workItemSizes);
 
     // input
-    std::cout << "Max Work Group Size: " << maxWorkGrpSize << std::endl;
-    std::cout << "Max Work Item Size: " << workItemSizes[0] << std::endl;
+//    std::cout << "Max Work Group Size: " << maxWorkGrpSize << std::endl;
+//    std::cout << "Max Work Item Size: " << workItemSizes[0] << std::endl;
     
     // setup data & buffers & local args
     cl::Buffer prim_buff(m_context,CL_MEM_READ_WRITE,sizeof(Primitive)*n_primitives);

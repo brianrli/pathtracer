@@ -18,10 +18,15 @@ Pathtracer *pathtracer = NULL;
 int window_height = 720;
 int window_width = 720;
 int size = window_height * window_width;
+int iterations = 0;
 
 //forward declarations
 void initialize(int argc, char**argv);
 bool initGL();
+
+float clip(float n, float lower, float upper) {
+    return std::max(lower, std::min(n, upper));
+}
 
 // ===[ M A I N ]===
 int main(int argc, char **argv) {
@@ -42,6 +47,7 @@ int main(int argc, char **argv) {
 
 void display() {
     
+    iterations++;
     std::clock_t start = std::clock();
     double duration;
     
@@ -49,8 +55,9 @@ void display() {
     float* pixels = (float*)f_pixels;
     
     duration = (std::clock()-start)/(double) CLOCKS_PER_SEC;
-    
-    std::cout << "Render took " << duration << " seconds." << std::endl;
+//    
+//    std::cout << "iteration: " << iterations << " took "
+//    << duration << " seconds." << std::endl;
     
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
@@ -58,14 +65,13 @@ void display() {
     int height = pathtracer->get_height();
     unsigned char* imageData = new unsigned char[width * height * 3];
     for(int i = 0; i < (width*height*3); i++) {
-        imageData[i] = (unsigned char)(pixels[i] * 255);
+        imageData[i] = (unsigned char)(clip(pixels[i],0.0,1.0) * 255);
     }
 
     glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
 
     //delete
     delete [] imageData;
-    delete f_pixels;
     
     // Show the texture:
     glBindTexture (GL_TEXTURE_2D, PATH_TRACER_BITMAP);
@@ -85,7 +91,7 @@ void display() {
     glutSwapBuffers();
     
     //no redraw when debugging
-//    glutPostRedisplay();
+    glutPostRedisplay();
 }
 
 void initialize(int argc, char**argv) {
@@ -126,9 +132,7 @@ bool initGL() {
     glPushMatrix();
     glLoadIdentity();
     
-    
     // Create a texture for displaying the render:
-    // TODO: Move to a function.
     glBindTexture(GL_TEXTURE_2D, PATH_TRACER_BITMAP);
     
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -136,14 +140,12 @@ bool initGL() {
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     // Use nearest-neighbor point sampling instead of linear interpolation:
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); //glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     
     // Enable textures:
     glEnable(GL_TEXTURE_2D);
-    
-    //CUT_CHECK_ERROR_GL(); // ???
     
     return true;
 }
