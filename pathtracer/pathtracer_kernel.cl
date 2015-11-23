@@ -191,11 +191,12 @@ Vector randomSampleHemisphere(Vector normal, int *seed) {
     float r2 = rand(seed);
     
     // pythagorean
-    float r = sqrt(1.0f - z * z);
+    float r = sqrt(z);
     float phi = 2 * M_PI_F * r2;
     
     float x = cos(phi) * r;
     float y = sin(phi) * r;
+    z = sqrt(1 - z);
     
     //x y z coordinates
     Vector most_perpendicular;
@@ -472,6 +473,7 @@ Vector pathtrace(Ray ray,local Primitive *primitives, int n_primitives, int *see
     }
 
     return color;
+//    return clamp(color,0.0f,1.0f);
 }
 
 // main pathtracing kernel
@@ -482,7 +484,8 @@ __kernel void pathtracer_kernel(const __global float4* global_primitives,
                                 int height,
                                 __global Pixel* image,
                                 __local float4* local_primitives,
-                                __global int* seed_memory) {
+                                __global int* seed_memory,
+                                int iteration) {
 
     
     // perform copy from global to local memory
@@ -504,21 +507,33 @@ __kernel void pathtracer_kernel(const __global float4* global_primitives,
         return;
     }
     
+    // ======[ Stratified Jittering ]======
     // Monte Carlo == Create a Random Number
     // pnrg
     // http://www0.cs.ucl.ac.uk/staff/ucacbbl/ftp/papers/langdon_2009_CIGPU.pdf
     int seed = seed_memory[gid];
+
+    int n = 6;
     
     // calculate pixel coordinates
     float x = fmod((float)gid,(float)width);
     float y = gid / (float)width;
+
+    x = (x/(float)width) - 0.5f;
+    y = (y/(float)height) - 0.5f;
+
+    float left_limit = x - 1/(float)(width + width);
+    float top_limit = y - 1/(float)(height + height);
     
-    float inv_w = 1/(float)width;
-    float inv_h = 1/(float)height;
+    int cell = iteration % (n * n);
     
-    // slight jitter
-    x = (x/(float)width) - 0.5f + ((rand(&seed)-0.5) * 1/(float)width);
-    y = (y/(float)height) - 0.5f + ((rand(&seed)-0.5) * 1/(float)height);
+    float inv_n_w = 1/(float)(n * width);
+    float inv_n_h = 1/(float)(n * height);
+
+    x = left_limit + ((cell%n) + rand(&seed)) * inv_n_w;
+    y = top_limit + ((cell/n)  + rand(&seed)) * inv_n_h;
+    //=======================================
+    
     
     ray.origin = camera->eye;
     ray.direction = normalize((x * camera->u) + (y * camera->v) + -(camera->n));

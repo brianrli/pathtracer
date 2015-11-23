@@ -62,7 +62,7 @@ Pixel* Pathtracer::fake_render() {
     
     // path trace
     ocl_manager->kernel_execute(primitives,camera,n_primitives,
-                                image,width,height,seed_memory);
+                                image,width,height,seed_memory,iterations);
     
     iterations++;
     
@@ -73,7 +73,6 @@ Pixel* Pathtracer::fake_render() {
         float i1 = 1/(float)iterations;
         float i2 = (float)(iterations-1)/(float)iterations;
 
-    
 //        std::cout << i1 << " " << i2 << std::endl;
         for (int i = 0; i < width*height; i++) {
             image_data[i].red = (i1*image[i].red)+(i2*image_data[i].red);
@@ -81,18 +80,15 @@ Pixel* Pathtracer::fake_render() {
             image_data[i].green = (i1*image[i].green)+(i2*image_data[i].green);
         }
         
-        delete [] image;
-    }else if (iterations == 1){
+    }
+    else if (iterations == 1){
+
         for (int i = 0; i < width*height; i++) {
             image_data[i] = image[i];
         }
-        
-        delete [] image;
-    }
-    else {
-        delete [] image;
     }
     
+    delete [] image;
     return image_data;
 };
 
@@ -111,7 +107,7 @@ int Pathtracer::set_camera() {
 int Pathtracer::set_scene() {
     
     // what is going on with the Y
-    n_primitives = 3;
+    n_primitives = 4;
     primitives = (Primitive *) malloc(sizeof(Primitive)*n_primitives);
     
     // second sphere
@@ -119,21 +115,28 @@ int Pathtracer::set_scene() {
     primitives[0].type = {0,0,0};
     primitives[0].center = {1,0,0,0};
     primitives[0].radius = .5f;
-    primitives[0].diffuse = {0.3,0.7,0.7,0};
+    primitives[0].diffuse = {0.9,0.9,0.9,0};
     
     // create light
     primitives[1] = create_primitive();
-    primitives[1].center = (cl_float4){0,-1,0,0};
+    primitives[1].center = (cl_float4){0,0.3,0,0};
     primitives[1].type = {0,0,0};
     primitives[1].radius = 0.2f;
-    primitives[1].emissive = (cl_float4){35,35,35,35};
+    primitives[1].emissive = (cl_float4){4,4,4,4};
     
     // planes
     primitives[2] = create_primitive();
     primitives[2].type = {1,0,0};
-    primitives[2].center = {0,2,0,0};
+    primitives[2].center = {0,0.5,0,0};
     primitives[2].plane_normal = {0,-1,0,0};
-    primitives[2].diffuse = {0.3,0.3,0.3,0};
+    primitives[2].diffuse = {0.8,0.2,0.2,0};
+    
+    // planes
+    primitives[3] = create_primitive();
+    primitives[3].type = {1,0,0};
+    primitives[3].center = {0,0,0.7,0};
+    primitives[3].plane_normal = {0,0,-1,0};
+    primitives[3].diffuse = {0.2,0.8,0.2,0};
     
     return 1;
 }
