@@ -31,14 +31,9 @@ typedef struct {
 
 void setPixel(Pixel *p, Vector color);
 void setPixel(Pixel *p, Vector color) {
-
     p->red = color.x;
     p->green = color.y;
     p->blue = color.z;
-
-    if(DEBUG) {
-//        printf("%u %u %u\n",p->red,p->green,p->blue);
-    }
 }
 
 // ===[ Camera ]===
@@ -165,8 +160,8 @@ bool islight(Primitive p){
             p.emissive.s3 > 0) ? true : false;
 }
 
-bool isreflective(Primitive p){
-    return (p.reflective.s3 == 1) ? true : false;
+bool isspecular(Primitive p){
+    return (any(p.specular > 0)) ? true : false;
 }
 
 bool isrefractive(Primitive p){
@@ -340,13 +335,10 @@ Ray handle_diffuse(Isect isect, Ray r, int *seed) {
 Ray handle_reflective(Isect isect, Ray r);
 Ray handle_reflective(Isect isect, Ray r) {
     
-    Ray new_ray = create_ray(r.depth+1,REFLECTION);
-    
+    Ray new_ray = create_ray(r.depth+1,PRIMARY);
     new_ray.direction = normalize(r.direction -
                                   (2 * dot(isect.normal,r.direction) * isect.normal));
-    
     new_ray.origin = isect.point + (EPSILON * new_ray.direction);
-    
     return new_ray;
 }
 
@@ -370,8 +362,26 @@ Vector refract(Vector D, Vector N, float index){
     return t;
 }
 
-Ray handle_refractive(Isect isect, Ray r);
-Ray handle_refractive(Isect isect, Ray r) {
+float schlick_fresnel(Isect isect, Ray r);
+float schlick_fresnel(Isect isect, Ray r) {
+
+    float n2 = (*isect.primitive).refractive.x;
+    float r0 = pow((1-n2)/(1+n2),2);
+    float result;
+    
+    // entering material
+    if(dot(r.direction,isect.normal) < 0.0f){
+        result = r0 + (1-r0) * pow(1-dot(isect.normal,-r.direction),5);
+    }
+    // leaving material
+    else {
+        result = r0 + (1-r0) * pow(1-dot(isect.normal,r.direction),5);
+    }
+    return result;
+}
+
+Ray handle_refractive(Isect isect, Ray r, float r1);
+Ray handle_refractive(Isect isect, Ray r, float r1) {
     
     Ray new_ray = create_ray(r.depth+1,REFRACTIVE);
 
@@ -392,18 +402,19 @@ Ray handle_refractive(Isect isect, Ray r) {
         t = refract(d,-N,n);
     }
 
-    if(t.w == 1.0f){
+    // refracted
+    if(t.w == 1.0f && r1 > schlick_fresnel(isect,r)){
         t.w = 0;
         new_ray.direction = t;
     }
+    // total internal reflection
     else {
         float ndoti = dot(N,-d);
+        // just reflection equation
         new_ray.direction = (ndoti + ndoti)*N + d;
     }
 
-    new_ray.transparency = (*isect.primitive).refractive.y;
     new_ray.origin = isect.point + (EPSILON * new_ray.direction);
-    
     return new_ray;
 }
 
@@ -452,17 +463,30 @@ Vector pathtrace(Ray ray,local Primitive *primitives, int n_primitives, int *see
         //
         if (found_intersect) {
             
-            // =====[ Emission ]=====
+            // =====[ Emission ( light ) ]=====
             if(islight(*isect.primitive)) {
-               color += weight * (*isect.primitive).emissive;
+                color += weight * (*isect.primitive).emissive;
             }
-           else {
-               // =====[ Shading ]=====
-               Ray new_ray = handle_diffuse(isect,r,seed);
-               weight *= 2.0f * (*isect.primitive).diffuse * dot(isect.normal,new_ray.direction);
-               push_back(&ray_queue,new_ray);
-               
-           }
+            else {
+                // =====[ Shading ]=====
+
+                
+                //Transmission / TIR
+                if (isrefractive(*isect.primitive)) {
+                    push_back(&ray_queue,handle_refractive(isect,r,rand(seed)));
+                }
+                //Reflection
+                else if (isspecular(*isect.primitive)) {
+                    weight *= (*isect.primitive).specular;
+                    push_back(&ray_queue,handle_reflective(isect,r));
+                }
+                // Diffuse
+                else {
+                    Ray new_ray = handle_diffuse(isect,r,seed);
+                    weight *= 2.0f * (*isect.primitive).diffuse * dot(isect.normal,new_ray.direction);
+                    push_back(&ray_queue,new_ray);
+                }
+            }
         }
         else {
             color+= weight * BACKGROUND_COLOR;
@@ -473,7 +497,6 @@ Vector pathtrace(Ray ray,local Primitive *primitives, int n_primitives, int *see
     }
 
     return color;
-//    return clamp(color,0.0f,1.0f);
 }
 
 // main pathtracing kernel
