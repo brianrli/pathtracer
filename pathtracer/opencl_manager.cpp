@@ -88,7 +88,18 @@ int OpenCL_Manager::kernel_load(std::string file_name,
     
     m_program = cl::Program(m_context,source,true);
     
-    if(m_program.build({m_device})!=CL_SUCCESS) {
+    cl_int err = m_program.build({m_device});
+
+    if(err != CL_SUCCESS) {
+//        if(err == CL_INVALID_BINARY ) {
+//            std::cout << "a" << std::endl;
+//        }
+//        else if (err == CL_INVALID_OPERATION ) {
+//            std::cout << "b" << std::endl;
+//        }
+//        else if (err == CL_BUILD_PROGRAM_FAILURE ) {
+//            std::cout << "c" << std::endl;
+//        }
         std::cout << "Build Status: " << m_program.getBuildInfo<CL_PROGRAM_BUILD_STATUS>({m_device}) << std::endl;
         std::cout << "Build Options:\t" << m_program.getBuildInfo<CL_PROGRAM_BUILD_OPTIONS>({m_device}) << std::endl;
         std::cout << "Build Log:\t " << m_program.getBuildInfo<CL_PROGRAM_BUILD_LOG>({m_device}) << std::endl;
@@ -100,54 +111,87 @@ int OpenCL_Manager::kernel_load(std::string file_name,
     
     return 0;
 }
-    
+
+
 
 int OpenCL_Manager::kernel_execute(Primitive *primitives, Camera *camera, int n_primitives,
                                    Pixel *image, int width, int height, int* seed_memory,
-                                   int iterations) {
+                                   int iterations, Triangle *triangles, int n_triangles,
+                                   Material *materials, int n_materials) {
     
     
-    //limits
+    // [ Limits ]
     size_t maxWorkGrpSize = 5;
     std::vector<size_t> workItemSizes;
     
-     clcheck(m_device.getInfo<size_t>(CL_DEVICE_MAX_WORK_GROUP_SIZE, &maxWorkGrpSize),
-             "Max Work Group Size Query");
+    clcheck(m_device.getInfo<size_t>(CL_DEVICE_MAX_WORK_GROUP_SIZE, &maxWorkGrpSize),
+         "Max Work Group Size Query");
     m_device.getInfo<std::vector<size_t> >(CL_DEVICE_MAX_WORK_ITEM_SIZES, &workItemSizes);
 
-    // input
-//    std::cout << "Max Work Group Size: " << maxWorkGrpSize << std::endl;
-//    std::cout << "Max Work Item Size: " << workItemSizes[0] << std::endl;
     
     // setup data & buffers & local args
+    
+    // [ Global ]
     cl::Buffer prim_buff(m_context,CL_MEM_READ_WRITE,sizeof(Primitive)*n_primitives);
-    cl::Buffer nprim_buff(m_context,CL_MEM_READ_ONLY,sizeof(int));
     cl::Buffer camera_buff(m_context,CL_MEM_READ_ONLY,sizeof(Camera));
     cl::Buffer image_buff(m_context,CL_MEM_WRITE_ONLY,sizeof(Pixel)*width*height);
     cl::Buffer seed_memory_buff(m_context,CL_MEM_READ_WRITE,sizeof(int)*width*height);
-    cl::LocalSpaceArg local_prim_buff = cl::Local(sizeof(Primitive)*n_primitives);
+    cl::Buffer tri_buff(m_context,CL_MEM_READ_ONLY,sizeof(Triangle)*n_triangles);
+    cl::Buffer mat_buff(m_context,CL_MEM_READ_ONLY,sizeof(Material)*n_materials);
     
-    // create command queue
+    // [ Local ]
+    cl::LocalSpaceArg local_prim_buff = cl::Local(sizeof(Primitive)*n_primitives);
+    cl::LocalSpaceArg local_mat_buff = cl::Local(sizeof(Material)*n_materials);
+    
+    // [ Command Queue ]
     m_queue = cl::CommandQueue(m_context,m_device);
     
-    // set kernel arguments
+    // [ Set Kernel Arguments ]
     clcheck(m_queue.enqueueWriteBuffer(prim_buff,CL_TRUE,0,sizeof(Primitive)*n_primitives, primitives),
           "prim_buff write");
     clcheck(m_queue.enqueueWriteBuffer(camera_buff,CL_TRUE,0,sizeof(Camera),camera),
           "camera_buff write");
     clcheck(m_queue.enqueueWriteBuffer(image_buff, CL_TRUE, 0, sizeof(Pixel)*width*height, image),
           "image_buff write");
-    clcheck(m_queue.enqueueWriteBuffer(seed_memory_buff, CL_TRUE, 0, sizeof(int)*width*height, seed_memory),"seed_memory_buff write");
+    clcheck(m_queue.enqueueWriteBuffer(seed_memory_buff, CL_TRUE, 0, sizeof(int)*width*height, seed_memory),
+            "seed_memory_buff write");
+    clcheck(m_queue.enqueueWriteBuffer(tri_buff, CL_TRUE, 0, sizeof(Triangle)*n_triangles, triangles),
+            "tri_buff write");
+    clcheck(m_queue.enqueueWriteBuffer(mat_buff, CL_TRUE, 0, sizeof(Material)*n_materials, materials),
+            "mat_memory_buff write");
     
-    clcheck(m_kernel.setArg(0,prim_buff),"set prim_buff");
-    clcheck(m_kernel.setArg(1,n_primitives),"set nprim_buff"); // scalar
-    clcheck(m_kernel.setArg(2,camera_buff),"set camera_buff");
-    clcheck(m_kernel.setArg(3,width),"set width"); // scalar
-    clcheck(m_kernel.setArg(4,height),"set height"); // scalar
-    clcheck(m_kernel.setArg(5,image_buff),"set image_buff");
-    clcheck(m_kernel.setArg(6,local_prim_buff),"set local primitives"); //local
-    clcheck(m_kernel.setArg(7,seed_memory_buff),"set seed memory");
-    clcheck(m_kernel.setArg(8,iterations),"set iterations"); // scalar
+    //const __global float4* global_primitives,
+    //const __global Triangle* triangles,
+    //const __global float4* global_materials,
+    //__global Pixel* image,
+    //__global int* seed_memory,
+    //__global Camera* camera,
+    //__local float4* local_primitives,
+    //__local float4* local_materials,
+    //int width,
+    //int height,
+    //int iteration,
+    //int n_triangles,
+    //int n_materials,
+    //int n_primitives
+    
+    // Global
+    clcheck(m_kernel.setArg(0,prim_buff),"Global Primitives");
+    clcheck(m_kernel.setArg(1,tri_buff),"Global Triangles");
+    clcheck(m_kernel.setArg(2,mat_buff),"Global Materials");
+    clcheck(m_kernel.setArg(3,image_buff),"Global Image");
+    clcheck(m_kernel.setArg(4,seed_memory_buff),"Global Seed Memory");
+    clcheck(m_kernel.setArg(5,camera_buff),"Global Camera");
+    // Locals
+    clcheck(m_kernel.setArg(6,local_prim_buff),"Local Primitives");
+    clcheck(m_kernel.setArg(7,local_mat_buff),"Local Materials");
+    // Scalars
+    clcheck(m_kernel.setArg(8,width),"set width");
+    clcheck(m_kernel.setArg(9,height),"set height");
+    clcheck(m_kernel.setArg(10,iterations),"set iterations");
+    clcheck(m_kernel.setArg(11,n_triangles),"set n_triangles");
+    clcheck(m_kernel.setArg(12,n_materials),"set n_materials");
+    clcheck(m_kernel.setArg(13,n_primitives),"set n_primitives");
     
     int global_size, size = width*height;
     

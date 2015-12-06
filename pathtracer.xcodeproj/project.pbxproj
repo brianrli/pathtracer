@@ -16,6 +16,7 @@
 		C7AFA2B41BCDD419003A5C5D /* pathtracer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C736B9B41BB4BB1700E25468 /* pathtracer.cpp */; };
 		C7AFA2B51BCDD419003A5C5D /* opencl_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C78DFD731BB0601900E58B64 /* opencl_manager.cpp */; };
 		C7AFA2B61BCDD419003A5C5D /* png_writer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C736B9AD1BB3864400E25468 /* png_writer.cpp */; };
+		C7B4E7CA1C148C3E00AC8238 /* obj_reader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C7B4E7C81C148C3E00AC8238 /* obj_reader.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -46,6 +47,8 @@
 		C78DFD6F1BAF35D700E58B64 /* pathtracer_kernel.cl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.opencl; path = pathtracer_kernel.cl; sourceTree = "<group>"; };
 		C78DFD721BB05FEF00E58B64 /* opencl_manager.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = opencl_manager.hpp; sourceTree = "<group>"; };
 		C78DFD731BB0601900E58B64 /* opencl_manager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = opencl_manager.cpp; sourceTree = "<group>"; };
+		C7B4E7C81C148C3E00AC8238 /* obj_reader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = obj_reader.cpp; sourceTree = "<group>"; };
+		C7B4E7C91C148C3E00AC8238 /* obj_reader.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = obj_reader.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -92,6 +95,8 @@
 				C78DFD721BB05FEF00E58B64 /* opencl_manager.hpp */,
 				C736B9AD1BB3864400E25468 /* png_writer.cpp */,
 				C736B9AE1BB3864400E25468 /* png_writer.hpp */,
+				C7B4E7C81C148C3E00AC8238 /* obj_reader.cpp */,
+				C7B4E7C91C148C3E00AC8238 /* obj_reader.hpp */,
 				C78DFD6F1BAF35D700E58B64 /* pathtracer_kernel.cl */,
 			);
 			path = pathtracer;
@@ -164,6 +169,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C7B4E7CA1C148C3E00AC8238 /* obj_reader.cpp in Sources */,
 				C7AFA2B31BCDD419003A5C5D /* common.hpp in Sources */,
 				C7AFA2B41BCDD419003A5C5D /* pathtracer.cpp in Sources */,
 				C7AFA2B51BCDD419003A5C5D /* opencl_manager.cpp in Sources */,

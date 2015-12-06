@@ -7,7 +7,7 @@
 class OpenCL_Manager {
     
 public:
-    // constructor
+    // Constructor
     OpenCL_Manager();
 
     int initialize();
@@ -15,9 +15,11 @@ public:
     int kernel_load(std::string file_name,
                     std::string kernel_name);
     
+    // Execute Kernel
     int kernel_execute(Primitive *primitives, Camera *camera, int n_primitives,
-                       Pixel *image, int width, int height, int *seed_memory,
-                       int iterations);
+                       Pixel *image, int width, int height, int* seed_memory,
+                       int iterations, Triangle *triangles, int n_triangles,
+                       Material *materials, int n_materials);
     
 private:
     cl::Platform m_platform;

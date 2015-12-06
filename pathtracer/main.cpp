@@ -1,6 +1,17 @@
+// =======================================
 // ===[A C K N O W L E D G E M E N T S]===
 //The GUI code is taken from Peter and Karl's GPU Pathtracer
 //https://github.com/peterkutz/GPUPathTracer
+
+//The OBJ Reader code is modified from:
+//http://www.opengl-tutorial.org/beginners-tutorials/tutorial-7-model-loading/
+// =======================================
+
+// =========================================
+// ===[B R I A N'S  P A T H  T R A C E R]===
+// cpsc 490 at Yale
+// advised by Professor Rushmeier
+// =========================================
 
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
@@ -9,6 +20,7 @@
 #include "pathtracer.hpp"
 #include "opencl_manager.hpp"
 #include "png_writer.hpp"
+#include "obj_reader.hpp"
 
 #include <ctime>
 
@@ -28,22 +40,42 @@ float clip(float n, float lower, float upper) {
     return std::max(lower, std::min(n, upper));
 }
 
+void errorm(std::string error_message) {
+    std::cout << error_message << std::endl;
+    exit(0);
+}
+
 // ===[ M A I N ]===
 int main(int argc, char **argv) {
-    
-    //create pathtracer
-    pathtracer = new Pathtracer();
 
-    pathtracer->set_scene();
-    pathtracer->set_camera();
+    // [ create pathtracer ]
+    pathtracer = new Pathtracer();
     
+    // Triangles
+    std::vector<Vec3f> vertices;
+    
+    if(load_obj("objs/gourd.obj",vertices)) {
+        if (!pathtracer->set_triangles(vertices))
+            errorm("Couldn't set the triangles.");
+    }
+    else {
+        errorm("Couldn't read the OBJ File.");
+    }
+    
+    // Scene (not triangles)
+    pathtracer->set_scene();
+    
+    // Camera
+    pathtracer->set_camera();
+
     size = window_width * window_height;
     
-    //display
+    // Display
     initialize(argc, argv);
     
     return 0;
 }
+// =================
 
 void display() {
     
@@ -55,7 +87,7 @@ void display() {
     float* pixels = (float*)f_pixels;
     
     duration = (std::clock()-start)/(double) CLOCKS_PER_SEC;
-//    
+
 //    std::cout << "iteration: " << iterations << " took "
 //    << duration << " seconds." << std::endl;
     
@@ -105,7 +137,7 @@ void initialize(int argc, char**argv) {
     initGL();
     
     glutDisplayFunc(display);
-    
+     
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.0, 0.0, 0.0, 1.0);
     

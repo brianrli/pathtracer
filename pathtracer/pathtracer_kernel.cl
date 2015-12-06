@@ -5,11 +5,12 @@
 typedef float4 Vector;
 
 // Constants
-__constant int MAXDEPTH = 8;
+__constant int MAXDEPTH = 15;
 __constant float ONE_THIRD_RT = 0.57735026919f;
-__constant Vector BACKGROUND_COLOR = {0.5f,0.5f,0.5f,0.0f};
+__constant Vector BACKGROUND_COLOR = {0.8f,0.8f,0.8f,0.0f};
 
 
+// ===[ Debugging ]===
 void print_vec(Vector vec);
 void print_vec2(Vector vec, Vector vec1);
 void print_vec(Vector vec) {
@@ -52,7 +53,6 @@ typedef struct {
     Raytype type;
     int depth;
     float t;
-    float transparency;
 } Ray;
 
 Ray create_ray(int d, Raytype rt);
@@ -60,7 +60,6 @@ Ray create_ray(int d, Raytype rt) {
     Ray ray;
     ray.type = rt;
     ray.depth = d;
-    ray.transparency = 1.0f;
     return ray;
 }
 
@@ -69,58 +68,27 @@ Vector point_at(Ray r, float t) {
     return r.origin + (r.direction * t);
 };
 
-// ===[ Ray Queue ]===
+// ===[ Triangle ]===
 typedef struct {
-    Ray data[10];
-    int back;
-    int front;
-} Queue;
+    float3 v1;
+    float3 v2;
+    float3 v3;
+    float3 material;
+} Triangle;
 
-Queue create_queue(Ray r);
-void push_back(Queue *q, Ray r);
-void pop_front(Queue *q);
-Ray front(Queue *q);
-bool empty(Queue *q);
-
-Queue create_queue(Ray r) {
-    Queue queue;
-    queue.data[0] = r;
-    queue.front = 0;
-    queue.back = 1;
-    
-    return queue;
-}
-
-void push_back(Queue *q, Ray r) {
-    q->data[q->back] = r;
-    q->back++;
-}
-
-void pop_front(Queue *q) {
-    if (q->front == q->back)
-        return;
-    q->front++;
-}
-
-//queue shift function?
-Ray front(Queue *q) {
-    return q->data[q->front];
-}
-
-bool empty(Queue *q) {
-    return q->front == q->back;
-}
+typedef struct {
+    Vector refractive;
+    Vector specular;
+    Vector diffuse;
+    Vector emissive;
+} Material;
 
 // ===[ Primitive ]===
 typedef struct {
-    // [ refractive ]
-    // w : 1 if refractive
-    // y : transparency coefficient
+    // [ refractive / transmissive ]
+    // w : 1 if transmissive
     // x : index of refraction
     Vector refractive;
-    
-    // [ reflective ]
-    Vector reflective;
     
     // [ specular ]
     // w : shininess
@@ -150,22 +118,32 @@ typedef struct {
 
 } Primitive;
 
-bool islight(Primitive p);
-bool isreflective(Primitive p);
-bool isrefractive(Primitive p);
+Material material_from_primitive(Primitive p);
+Material material_from_primitive(Primitive p) {
+    Material m;
+    m.refractive = p.refractive;
+    m.specular = p.specular;
+    m.diffuse = p.diffuse;
+    m.emissive = p.emissive;
+    return m;
+}
+
+bool islight(Material m);
+bool isrefractive(Material m);
+bool isspecular(Material m);
     
-bool islight(Primitive p){
-    return (p.emissive.s1 > 0 ||
-            p.emissive.s2 > 0 ||
-            p.emissive.s3 > 0) ? true : false;
+bool islight(Material m){
+    return (m.emissive.s1 > 0 ||
+            m.emissive.s2 > 0 ||
+            m.emissive.s3 > 0) ? true : false;
 }
 
-bool isspecular(Primitive p){
-    return (any(p.specular > 0)) ? true : false;
+bool isspecular(Material m){
+    return (any(m.specular > EPSILON)) ? true : false;
 }
 
-bool isrefractive(Primitive p){
-    return (p.refractive.s3 == 1) ? true : false;
+bool isrefractive(Material m){
+    return (m.refractive.s3 == 1) ? true : false;
 }
 
 // ===[ Monte Carlo ]===
@@ -220,13 +198,63 @@ typedef struct {
     Vector normal;
     Vector point;
     local Primitive *primitive;
-    int id;
-//    global Primitive *primitive;
+    Triangle triangle;
+    bool is_triangle;
 } Isect;
 
+// intersect Triangles (moller trumbore);
+bool intersect_tri(Ray *r, global Triangle *tri, float *t, Isect *isect);
+bool intersect_tri(Ray *r, global Triangle *tri, float *t, Isect *isect) {
+    
+    float3 edge1 = tri->v2 - tri->v1; //edge1
+    float3 edge2 = tri->v3 - tri->v1; //edge2
+    float3 pvec = cross((*r).direction.xyz,edge2);
+    
+    float det = dot(edge1,pvec);
+    
+    // ray and triangle are parallel
+    if(fabs(det) < EPSILON) {
+        return false;
+    }
+    
+    float invDet = 1/det;
+    
+    float3 tvec = (*r).origin.xyz - tri->v1;
+    float u = dot(tvec,pvec) * invDet;
 
-// intersect
-//bool intersect(Ray *r,global Primitive *p, float *t, Isect *isect) {
+    if (u < 0 || u > 1) {
+        return false;
+    }
+    
+    float3 qvec = cross(tvec,edge1);
+    float v = dot((*r).direction.xyz,qvec) * invDet;
+
+    if (v < 0 || u+v > 1) {
+        return false;
+    }
+    
+    float tt = dot(edge2,qvec) * invDet;
+    
+    if (tt < *t && tt > 0.0f) {
+        
+        *t = tt;
+        
+        (*isect).point = point_at(*r,*t);
+        
+        float3 n = normalize(cross(edge1,edge2));
+        
+        (*isect).normal = (float4) {n.x,n.y,n.z,0.0f};
+        
+        (*isect).triangle = *tri;
+//        printf("material %f\n",(isect->triangle->material).x);
+        (*isect).is_triangle = true;
+        return true;
+    }
+
+    return false;
+}
+
+// intersect Primitives
 bool intersect(Ray *r,local Primitive *p, float *t, Isect *isect);
 bool intersect(Ray *r,local Primitive *p, float *t, Isect *isect) {
     
@@ -273,22 +301,13 @@ bool intersect(Ray *r,local Primitive *p, float *t, Isect *isect) {
             
         }
         
+        // intersect found
         if (tt < *t && tt > 0.0f) {
-    
-            if ((*r).type == PRIMARY
-                || (*r).type == REFLECTION
-                || (*r).type == REFRACTIVE) {
-                
-                 *t = tt;
-                (*isect).point = point_at(*r,*t);
-                (*isect).normal = normalize((*isect).point - (*p).center);
-                (*isect).primitive = p;
-            }
-            
+             *t = tt;
+            (*isect).point = point_at(*r,*t);
+            (*isect).normal = normalize((*isect).point - (*p).center);
+            (*isect).primitive = p;
             return true;
-        }
-        else {
-            return false;
         }
     }
     // Plane
@@ -302,28 +321,23 @@ bool intersect(Ray *r,local Primitive *p, float *t, Isect *isect) {
             Vector between = p->center - (*r).origin;
             tt = dot(between, p->plane_normal) / denom;
 
+            // intersect found
             if (tt < *t && tt >= 0) {
-                if ((*r).type == PRIMARY
-                    || (*r).type == REFLECTION
-                    || (*r).type == REFRACTIVE) {
-
-                    *t = tt;
-                    (*isect).point = point_at(*r,*t);
-                    (*isect).normal = normalize(p->plane_normal);
-                    (*isect).primitive = p;
-                }
+                *t = tt;
+                (*isect).point = point_at(*r,*t);
+                (*isect).normal = normalize(p->plane_normal);
+                (*isect).primitive = p;
                 
                 return true;
             }
         }
-        
-        return false;
     }
     
     return false;
 }
 
 // [ Diffuse ]
+Ray handle_diffuse(Isect isect, Ray r, int *seed);
 Ray handle_diffuse(Isect isect, Ray r, int *seed) {
     Ray new_ray = create_ray(r.depth+1,PRIMARY);
     new_ray.direction = randomSampleHemisphere(isect.normal,seed);
@@ -362,33 +376,39 @@ Vector refract(Vector D, Vector N, float index){
     return t;
 }
 
-float schlick_fresnel(Isect isect, Ray r);
-float schlick_fresnel(Isect isect, Ray r) {
+//get refractive index
+float reindex(Material m);
+float reindex(Material m) {
+	return m.refractive.x;
+}
 
-    float n2 = (*isect.primitive).refractive.x;
-    float r0 = pow((1-n2)/(1+n2),2);
+float schlick_fresnel(Isect isect, Ray r, Material m);
+float schlick_fresnel(Isect isect, Ray r, Material m) {
+
+    float n2 = reindex(m);
+    float F0 = pow((1-n2)/(1+n2),2);
     float result;
     
     // entering material
     if(dot(r.direction,isect.normal) < 0.0f){
-        result = r0 + (1-r0) * pow(1-dot(isect.normal,-r.direction),5);
+        result = F0 + (1-F0) * pow(1-dot(isect.normal,-r.direction),5);
     }
     // leaving material
     else {
-        result = r0 + (1-r0) * pow(1-dot(isect.normal,r.direction),5);
+        result = F0 + (1-F0) * pow(1-dot(isect.normal,r.direction),5);
     }
     return result;
 }
 
-Ray handle_refractive(Isect isect, Ray r, float r1);
-Ray handle_refractive(Isect isect, Ray r, float r1) {
+Ray handle_refractive(Isect isect, Ray r, Material m);
+Ray handle_refractive(Isect isect, Ray r, Material m) {
     
     Ray new_ray = create_ray(r.depth+1,REFRACTIVE);
 
     Vector N = isect.normal;
     Vector d = r.direction;
 
-    float n =(*isect.primitive).refractive.x;
+    float n = reindex(m);
 
     //new vector declarations
     Vector t = (float4) {0.0f,0.0f,0.0f,0.0f};
@@ -403,14 +423,14 @@ Ray handle_refractive(Isect isect, Ray r, float r1) {
     }
 
     // refracted
-    if(t.w == 1.0f && r1 > schlick_fresnel(isect,r)){
+    if(t.w == 1.0f) {
         t.w = 0;
         new_ray.direction = t;
     }
     // total internal reflection
+    // (just reflection equation)
     else {
         float ndoti = dot(N,-d);
-        // just reflection equation
         new_ray.direction = (ndoti + ndoti)*N + d;
     }
 
@@ -420,71 +440,80 @@ Ray handle_refractive(Isect isect, Ray r, float r1) {
 
 // render loop
 //Vector pathtrace(Ray ray,global Primitive *primitives, int n_primitives) {
-Vector pathtrace(Ray ray,local Primitive *primitives, int n_primitives, int *seed);
-Vector pathtrace(Ray ray,local Primitive *primitives, int n_primitives, int *seed) {
+Vector pathtrace(Ray ray,local Primitive *primitives, int n_primitives,
+                 global Triangle *triangles, int n_triangles, local Material *materials,
+                 int n_materials, int *seed);
+Vector pathtrace(Ray ray,local Primitive *primitives, int n_primitives,
+                 global Triangle *triangles, int n_triangles, local Material *materials,
+                 int n_materials, int *seed) {
     
-    //create ray queue
-    Queue ray_queue = create_queue(ray);
-
     // intersection
     Vector color = {0.0f,0.0f,0.0f,0.0f};
     Vector weight = {1.0f,1.0f,1.0f,0.0f};
-    
-    Isect isect;
-    bool return_background = true;
-    
-    int depth = 0;
 
-    while(!empty(&ray_queue)) {
-    
-        Vector contribution = {0.0f,0.0f,0.0f,0.0f};
+    Ray r = ray;
+    int b;
+    for(b = 0; b < MAXDEPTH; b++) {
         
         float t = 1000;
+        Isect isect;
+        isect.is_triangle = false;
         bool found_intersect = false;
-
-        Ray r = front(&ray_queue);
-        depth = r.depth + 1;
-
-        if (r.depth > MAXDEPTH) {
-            break;
-        }
+        Ray new_ray;
         
-        // Step 2. trace ray to find point of intersection
+        // trace ray to find point of intersection
         // with the nearest surface
         for(int i = 0; i < n_primitives; i++) {
             // if there is an intersection
             if(intersect(&r,&(primitives[i]),&t,&isect)) {
-                isect.id = i;
                 found_intersect = true;
-                return_background = false;
+            }
+        }
+        for (int i = 0; i < n_triangles; i++) {
+            if(intersect_tri(&r,&(triangles[i]),&t,&isect)) {
+                found_intersect = true;
             }
         }
         
-        //
+        // [ Process Intersection ]
         if (found_intersect) {
             
-            // =====[ Emission ( light ) ]=====
-            if(islight(*isect.primitive)) {
-                color += weight * (*isect.primitive).emissive;
+            Material m;
+
+            if(isect.is_triangle) {
+                m = materials[(int)isect.triangle.material.x];
+            }
+            else {
+                m = material_from_primitive((*isect.primitive));
+            }
+
+            // =====[ Emission (light) ]=====
+            if(islight(m)) {
+                color += weight * m.emissive;
+                break;
             }
             else {
                 // =====[ Shading ]=====
+            	bool fresnel = rand(seed) < schlick_fresnel(isect,r,m);
 
-                
-                //Transmission / TIR
-                if (isrefractive(*isect.primitive)) {
-                    push_back(&ray_queue,handle_refractive(isect,r,rand(seed)));
+                // [ Reflection]
+            	if(fresnel && isspecular(m)) {
+                    new_ray = handle_reflective(isect,r);
                 }
-                //Reflection
-                else if (isspecular(*isect.primitive)) {
-                    weight *= (*isect.primitive).specular;
-                    push_back(&ray_queue,handle_reflective(isect,r));
+                // [ Transmission / TIR ]
+                else if(isrefractive(m)) {
+                    if(fresnel) {
+                        new_ray = handle_reflective(isect,r);
+                    }
+                    else {
+                        new_ray = handle_refractive(isect,r,m);
+                    }
                 }
-                // Diffuse
+                // [ Diffuse ]
                 else {
-                    Ray new_ray = handle_diffuse(isect,r,seed);
-                    weight *= 2.0f * (*isect.primitive).diffuse * dot(isect.normal,new_ray.direction);
-                    push_back(&ray_queue,new_ray);
+                    weight *= m.diffuse;
+                    new_ray = handle_diffuse(isect,r,seed);
+                    weight *= 2.0f * dot(isect.normal,new_ray.direction);
                 }
             }
         }
@@ -492,31 +521,55 @@ Vector pathtrace(Ray ray,local Primitive *primitives, int n_primitives, int *see
             color+= weight * BACKGROUND_COLOR;
             break;
         }
+        
+        // [ Russian Roulette ]
+        if (b > 3) {            
+            float m = (weight.x > weight.y) ? weight.x : weight.y;
+            m = (weight.z > m) ? weight.z : m;
+            float pterm = rand(seed);
+            
+            if(m < pterm) {
+                break;
+            }
+            weight /= m;
+        }
+        
     
-        pop_front(&ray_queue);
+        r = new_ray;
     }
-
+    
     return color;
 }
 
 // main pathtracing kernel
 __kernel void pathtracer_kernel(const __global float4* global_primitives,
-                                int n_primitives,
+                                __global Triangle* triangles,
+                                const __global float4* global_materials,
+                                __global Pixel* image,
+                                __global int* seed_memory,
                                 __global Camera* camera,
+                                __local float4* local_primitives,
+                                __local float4* local_materials,
                                 int width,
                                 int height,
-                                __global Pixel* image,
-                                __local float4* local_primitives,
-                                __global int* seed_memory,
-                                int iteration) {
+                                int iteration,
+                                int n_triangles,
+                                int n_materials,
+                                int n_primitives) {
 
     
     // perform copy from global to local memory
-    event_t event = async_work_group_copy(local_primitives,
-                                          global_primitives,
-                                          (size_t) ((sizeof(Primitive) * n_primitives)/sizeof(float4)), 0);
-    wait_group_events(1, &event);
+    event_t events[2];
+    events[0] = async_work_group_copy(local_primitives,
+                                     global_primitives,
+                                     (size_t) ((sizeof(Primitive) * n_primitives)/sizeof(float4)), 0);
+    events[1] = async_work_group_copy(local_materials,
+                                      global_materials,
+                                      (size_t) ((sizeof(Material) * n_materials)/sizeof(float4)), 0);
+    
+    wait_group_events(2, events);
     local Primitive *primitives = (local Primitive*) local_primitives;
+    local Material *materials = (local Material*) local_materials;
     
     Pixel pixel;
     Vector color;
@@ -557,12 +610,13 @@ __kernel void pathtracer_kernel(const __global float4* global_primitives,
     y = top_limit + ((cell/n)  + rand(&seed)) * inv_n_h;
     //=======================================
     
-    
     ray.origin = camera->eye;
     ray.direction = normalize((x * camera->u) + (y * camera->v) + -(camera->n));
     
     // ray trace
-    color = pathtrace(ray,primitives,n_primitives, &seed);
+    color = pathtrace(ray,primitives,n_primitives,
+                      triangles,n_triangles,
+                      materials,n_materials,&seed);
     setPixel(&pixel,color);
     
     seed_memory[gid] = seed;

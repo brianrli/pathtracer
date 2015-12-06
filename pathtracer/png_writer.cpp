@@ -1,5 +1,4 @@
 #include "png_writer.hpp"
-
 #include <stdio.h>
 #include <math.h>
 
