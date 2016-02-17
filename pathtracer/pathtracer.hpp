@@ -38,6 +38,8 @@ public:
     // getters
     int get_width();
     int get_height();
+    int get_iterations();
+    Pixel* get_image();
 };
 
 #endif

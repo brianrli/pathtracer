@@ -5,7 +5,7 @@
 #include <Opencl/cl.hpp>
 #include "vecmath/mat.h"
 #include "vecmath/vec.h"
-#include <boost/compute.hpp>
+//#include <boost/compute.hpp>
 
 typedef unsigned char Color;
 
@@ -13,6 +13,14 @@ struct Pixel {
     float red;
     float green;
     float blue;
+};
+
+
+// write to png pixels
+struct WPixel {
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
 };
 
 struct Bitmap {

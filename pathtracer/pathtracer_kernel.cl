@@ -7,7 +7,7 @@ typedef float4 Vector;
 // Constants
 __constant int MAXDEPTH = 15;
 __constant float ONE_THIRD_RT = 0.57735026919f;
-__constant Vector BACKGROUND_COLOR = {0.8f,0.8f,0.8f,0.0f};
+__constant Vector BACKGROUND_COLOR = {0.5f,0.5f,0.5f,0.0f};
 
 
 // ===[ Debugging ]===
@@ -203,8 +203,8 @@ typedef struct {
 } Isect;
 
 // intersect Triangles (moller trumbore);
-bool intersect_tri(Ray *r, global Triangle *tri, float *t, Isect *isect);
-bool intersect_tri(Ray *r, global Triangle *tri, float *t, Isect *isect) {
+bool intersect_tri(Ray *r, local Triangle *tri, float *t, Isect *isect);
+bool intersect_tri(Ray *r, local Triangle *tri, float *t, Isect *isect) {
     
     float3 edge1 = tri->v2 - tri->v1; //edge1
     float3 edge2 = tri->v3 - tri->v1; //edge2
@@ -242,8 +242,14 @@ bool intersect_tri(Ray *r, global Triangle *tri, float *t, Isect *isect) {
         (*isect).point = point_at(*r,*t);
         
         float3 n = normalize(cross(edge1,edge2));
+
+        // if facing in same direction, flip
+        if(dot(n,(*r).direction.xyz) > 0.0f) {
+            n = -n;
+        }
         
         (*isect).normal = (float4) {n.x,n.y,n.z,0.0f};
+//        print_vec((*isect).normal);
         
         (*isect).triangle = *tri;
 //        printf("material %f\n",(isect->triangle->material).x);
@@ -391,12 +397,20 @@ float schlick_fresnel(Isect isect, Ray r, Material m) {
     
     // entering material
     if(dot(r.direction,isect.normal) < 0.0f){
+//        if(isect.is_triangle) {
+//            printf("%f\n",1-dot(isect.normal,-r.direction));
+////            print_vec2(isect.normal,-r.direction);
+////            printf("%f\n",dot(isect.normal,-r.direction));
+//            //        printf("%f\n",result);
+//        }
         result = F0 + (1-F0) * pow(1-dot(isect.normal,-r.direction),5);
     }
     // leaving material
     else {
         result = F0 + (1-F0) * pow(1-dot(isect.normal,r.direction),5);
     }
+    
+
     return result;
 }
 
@@ -441,10 +455,10 @@ Ray handle_refractive(Isect isect, Ray r, Material m) {
 // render loop
 //Vector pathtrace(Ray ray,global Primitive *primitives, int n_primitives) {
 Vector pathtrace(Ray ray,local Primitive *primitives, int n_primitives,
-                 global Triangle *triangles, int n_triangles, local Material *materials,
+                 local Triangle *triangles, int n_triangles, local Material *materials,
                  int n_materials, int *seed);
 Vector pathtrace(Ray ray,local Primitive *primitives, int n_primitives,
-                 global Triangle *triangles, int n_triangles, local Material *materials,
+                 local Triangle *triangles, int n_triangles, local Material *materials,
                  int n_materials, int *seed) {
     
     // intersection
@@ -494,8 +508,8 @@ Vector pathtrace(Ray ray,local Primitive *primitives, int n_primitives,
             }
             else {
                 // =====[ Shading ]=====
-            	bool fresnel = rand(seed) < schlick_fresnel(isect,r,m);
 
+                bool fresnel = rand(seed) < schlick_fresnel(isect,r,m);
                 // [ Reflection]
             	if(fresnel && isspecular(m)) {
                     new_ray = handle_reflective(isect,r);
@@ -513,7 +527,11 @@ Vector pathtrace(Ray ray,local Primitive *primitives, int n_primitives,
                 else {
                     weight *= m.diffuse;
                     new_ray = handle_diffuse(isect,r,seed);
-                    weight *= 2.0f * dot(isect.normal,new_ray.direction);
+                    weight *= dot(isect.normal,new_ray.direction)*2.0;
+                    
+//                    if(isect.is_triangle) {
+//                        printf("%f\n",dot(isect.normal,r.direction));
+//                    }
                 }
             }
         }
@@ -543,13 +561,14 @@ Vector pathtrace(Ray ray,local Primitive *primitives, int n_primitives,
 
 // main pathtracing kernel
 __kernel void pathtracer_kernel(const __global float4* global_primitives,
-                                __global Triangle* triangles,
+                                const __global float4* global_triangles,
                                 const __global float4* global_materials,
                                 __global Pixel* image,
                                 __global int* seed_memory,
                                 __global Camera* camera,
                                 __local float4* local_primitives,
                                 __local float4* local_materials,
+                                __local float4* local_triangles,
                                 int width,
                                 int height,
                                 int iteration,
@@ -559,22 +578,26 @@ __kernel void pathtracer_kernel(const __global float4* global_primitives,
 
     
     // perform copy from global to local memory
-    event_t events[2];
+    event_t events[3];
     events[0] = async_work_group_copy(local_primitives,
                                      global_primitives,
                                      (size_t) ((sizeof(Primitive) * n_primitives)/sizeof(float4)), 0);
     events[1] = async_work_group_copy(local_materials,
                                       global_materials,
                                       (size_t) ((sizeof(Material) * n_materials)/sizeof(float4)), 0);
-    
-    wait_group_events(2, events);
+    events[2] = async_work_group_copy(local_triangles,
+                                      global_triangles,
+                                      (size_t) ((sizeof(Triangle) * n_triangles)/sizeof(float4)), 0);
+
+    wait_group_events(3, events);
     local Primitive *primitives = (local Primitive*) local_primitives;
     local Material *materials = (local Material*) local_materials;
+    local Triangle *triangles = (local Triangle*) local_triangles;
     
     Pixel pixel;
     Vector color;
     Ray ray = create_ray(PRIMARY,0);
-    
+
     //
     int gid = get_global_id(0);
     

@@ -4,10 +4,21 @@
 
 /* Given "bitmap", this returns the pixel of bitmap at the point
  ("x", "y"). */
+float clip(float n, float lower, float upper) {
+    return std::max(lower, std::min(n, upper));
+}
 
-static Pixel *pixel_at (Bitmap * bitmap, int x, int y)
+WPixel* convert(Pixel *p) {
+    WPixel wp;
+    wp.red = (uint8_t)(255 * clip(p->red,0.0,1.0));
+    wp.green = (uint8_t)(255 * clip(p->green,0.0,1.0));
+    wp.blue = (uint8_t)(255 * clip(p->blue,0.0,1.0));
+    return &wp;
+}
+
+static WPixel *pixel_at (Bitmap * bitmap, int x, int y)
 {
-    return bitmap->pixels + bitmap->width * y + x;
+    return convert(bitmap->pixels + bitmap->width * y + x);
 }
 
 /* Write "bitmap" to a PNG file specified by "path"; returns 0 on
@@ -72,7 +83,7 @@ int save_png_to_file (Bitmap *bitmap, const char *path)
         png_byte *row = (png_byte *)png_malloc (png_ptr, sizeof (uint8_t) * bitmap->width * pixel_size);
         row_pointers[y] = row;
         for (x = 0; x < bitmap->width; ++x) {
-            Pixel* pixel = pixel_at(bitmap, x, y);
+            WPixel* pixel = pixel_at(bitmap, x, y);
             *row++ = pixel->red;
             *row++ = pixel->green;
             *row++ = pixel->blue;

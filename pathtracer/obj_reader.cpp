@@ -33,9 +33,9 @@ bool load_obj(char* path, std::vector<Vec3f> &out_vertices) {
             temp_vertices.push_back(vertex);
         }
         else if ( strcmp( lineHeader, "vn" ) == 0 ){
-            Vec3f normal;
-            fscanf(file, "%f %f %f\n", &normal[0], &normal[1], &normal[2]);
-            temp_normals.push_back(normal);
+//            Vec3f normal;
+//            fscanf(file, "%f %f %f\n", &normal[0], &normal[1], &normal[2]);
+//            temp_normals.push_back(normal);
         }
         else if (strcmp(lineHeader,"f") == 0) {
 

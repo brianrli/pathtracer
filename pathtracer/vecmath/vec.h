@@ -743,6 +743,15 @@ inline Vec3<T> operator ^(const Vec3<T>& a, const Vec3<T>& b) {
 					a.n[0]*b.n[1] - a.n[1]*b.n[0] );
 }
 
+//new power operator
+template <class T>
+inline Vec4<T> operator ^(const Vec4<T>& a, const Vec4<T>& b) {
+    return Vec4<T>( a.n[1]*b.n[2] - a.n[2]*b.n[1],
+                   a.n[2]*b.n[0] - a.n[0]*b.n[2],
+                   a.n[0]*b.n[1] - a.n[1]*b.n[0],
+                   0.0f );
+}
+
 template <class T>
 inline bool operator ==(const Vec3<T>& a, const Vec3<T>& b) {
 	return a.n[0]==b.n[0] && a.n[1] == b.n[1] && a.n[2] == b.n[2];

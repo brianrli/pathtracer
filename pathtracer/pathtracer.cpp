@@ -1,5 +1,7 @@
 #include "pathtracer.hpp"
 
+static float ONE_THIRD_RT = 0.57735026919f;
+
 // Primitive Constructor
 Primitive create_primitive(){
     Primitive primitive;
@@ -62,9 +64,12 @@ Pathtracer::Pathtracer() {
     ocl_manager->initialize();
     ocl_manager->kernel_load("pathtracer_kernel.cl",
                              "pathtracer_kernel");
-    
+
     width = 720;
     height = 720;
+//
+//    width = 480;
+//    height = 480;
     
     iterations = 0;
     
@@ -74,6 +79,8 @@ Pathtracer::Pathtracer() {
     }
     
     image_data = new Pixel[width*height];
+    
+    camera = new Camera();
 }
 
 //getters
@@ -83,6 +90,14 @@ int Pathtracer::get_width() {
 
 int Pathtracer::get_height() {
     return height;
+}
+
+Pixel* Pathtracer::get_image() {
+    return image_data;
+}
+
+int Pathtracer::get_iterations(){
+    return iterations;
 }
 
 // fake render
@@ -125,15 +140,39 @@ Pixel* Pathtracer::fake_render() {
 
 // set camera
 int Pathtracer::set_camera() {
-    camera = new Camera();
-    // defaults for now
-    Vec4f lookat = Vec4f();
-    Vec4f eye = Vec4f(0,0,-3,0);
     
-    set(camera->eye,Vec4f(0,0,-6,0));
+    // defaults for now
+//    {0.3,0.7,-0.7,0}
+    Vec4f lookat = Vec4f(0,0,0,0);
+//    Vec4f eye = Vec4f(0,0,-3,0);
+    Vec4f eye = Vec4f(2.0,-0.9,-3,0);
+
+    Vec4f most_perpendicular;
+    Vec4f look_vec = lookat - eye;
+
+    
+    most_perpendicular = Vec4f(0,1,0,0);
+
+    Vec4f n = -look_vec;
+    n.normalize();
+    Vec4f u = most_perpendicular^look_vec;
+    u.normalize();
+    Vec4f v = n^u;
+    v.normalize();
+//
+//    n.print();
+//    u.print();
+//    v.print();
+//    
+    set(camera->eye,eye);
     set(camera->n,Vec4f(0,0,-1,0));
     set(camera->u,Vec4f(1,0,0,0));
     set(camera->v,Vec4f(0,1,0,0));
+    
+    set(camera->n,n);
+    set(camera->u,u);
+    set(camera->v,-v);
+    
     return 1;
 }
 
@@ -143,7 +182,26 @@ void printclf3(cl_float3 f) {
 
 int Pathtracer::set_triangles(std::vector<Vec3f> vertices) {
     
-    // has to be divisible by three
+//    n_triangles = 1;
+//    triangles = (Triangle*)malloc(sizeof(Triangle) * n_triangles);
+//    triangles[0] = create_triangle();
+    
+    // debugging purposes
+    n_triangles = 2;
+    triangles = (Triangle*)malloc(sizeof(Triangle) * n_triangles);
+    triangles[0] = create_triangle();
+    triangles[0].v1 = (cl_float3){-0.3,0,0};
+    triangles[0].v3 = (cl_float3){-0.25,-0.1,0.1};
+    triangles[0].v2 = (cl_float3){-0.25,0.1,0};
+    triangles[0].material = (cl_float3){0,0,0};
+    
+    triangles[1] = create_triangle();
+    triangles[1].v1 = (cl_float3){-0.2,0,0.2};
+    triangles[1].v3 = (cl_float3){-0.25,-0.1,0.1};
+    triangles[1].v2 = (cl_float3){-0.25,0.1,0};
+    triangles[1].material = (cl_float3){0,0,0};
+    
+//     has to be divisible by three
     if ((vertices.size() % 3) != 0 ){
         return 0;
     }
@@ -160,13 +218,6 @@ int Pathtracer::set_triangles(std::vector<Vec3f> vertices) {
         index++;
     }
     
-//    for (int d = 0; d < n_triangles; d++) {
-//        printclf3(triangles[d].v1);
-//        printclf3(triangles[d].v2);
-//        printclf3(triangles[d].v3);
-//        printf("\n");
-//    }
-    
     return 1;
 }
 
@@ -177,35 +228,41 @@ int Pathtracer::set_scene() {
     n_materials = 1;
     materials = (Material*)malloc(sizeof(Material) * n_materials);
     materials[0] = create_material();
-    materials[0].diffuse = {0.7,0.2,0.2,0.0};
+    materials[0].diffuse = {0.2,0.6,0.2,0.0};
     
     // [ Primitives ]
-    n_primitives = 1;
+    n_primitives = 2;
     primitives = (Primitive *) malloc(sizeof(Primitive)*n_primitives);
     
 //    // ground plane
-//    primitives[0] = create_primitive();
-//    primitives[0].type = {1,0,0};
-//    primitives[0].center = {0,0.5,0,0};
-//    primitives[0].plane_normal = {0,-1,0,0};
-//    primitives[0].diffuse = {0.4,0.4,0.4,0};
-//    
-    // create light
     primitives[0] = create_primitive();
-    primitives[0].center = (cl_float4){0.8,-0.7,0,0};
-    primitives[0].type = {0,0,0};
-    primitives[0].radius = 0.2f;
-    primitives[0].emissive = (cl_float4){10,10,10,10};
+    primitives[0].type = {1,0,0};
+    primitives[0].center = {0,1,0,0};
+    primitives[0].plane_normal = {0,-1,0,0};
+    primitives[0].diffuse = {0.3,0.3,0.3,0};
+//
+    // create light
+    primitives[1] = create_primitive();
+    primitives[1].center = (cl_float4){-0.3,-0.7,0,0};
+    primitives[1].type = {0,0,0};
+    primitives[1].radius = .2;
+    primitives[1].emissive = {10,10,10,10};
     
 //    // reflective sphere
 //    primitives[2] = create_primitive();
 //    primitives[2].type = {0,0,0};
-//    primitives[2].center = {0.5,0.2,0,0};
-//    primitives[2].radius = .3f;
-//    primitives[2].refractive = {1.0,0,0,0};
-//    primitives[2].specular = {0.2,0.7,0.2,0};
-//    primitives[2].diffuse = {0.2,0.7,0.2,0};
+//    primitives[2].center = (cl_float4){0.0,0.4,0,0};
+//    primitives[2].radius = .4;
+//    primitives[2].specular = {0.7,0.7,0.2,0};
+//    primitives[2].refractive = {1.9,0,0,0.0};
 //    
+//    primitives[3] = create_primitive();
+//    primitives[3].type = {0,0,0};
+//    primitives[3].center = {0.8,0.7,0.3f,0};
+//    primitives[3].radius = .3f;
+//    primitives[3].diffuse = {0.8,0.8,0.8,0};
+    
+//
 //    // refractive sphere
 //    primitives[3] = create_primitive();
 //    primitives[3].type = {0,0,0};

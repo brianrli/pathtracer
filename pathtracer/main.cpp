@@ -23,6 +23,7 @@
 #include "obj_reader.hpp"
 
 #include <ctime>
+#include <cstdio>
 
 #define PATH_TRACER_BITMAP 13
 
@@ -36,9 +37,9 @@ int iterations = 0;
 void initialize(int argc, char**argv);
 bool initGL();
 
-float clip(float n, float lower, float upper) {
-    return std::max(lower, std::min(n, upper));
-}
+//float clip(float n, float lower, float upper) {
+//    return std::max(lower, std::min(n, upper));
+//}
 
 void errorm(std::string error_message) {
     std::cout << error_message << std::endl;
@@ -54,7 +55,9 @@ int main(int argc, char **argv) {
     // Triangles
     std::vector<Vec3f> vertices;
     
-    if(load_obj("objs/gourd.obj",vertices)) {
+//    pathtracer->set_triangles(vertices);
+    
+    if(load_obj("objs/cube.obj",vertices)) {
         if (!pathtracer->set_triangles(vertices))
             errorm("Couldn't set the triangles.");
     }
@@ -68,10 +71,22 @@ int main(int argc, char **argv) {
     // Camera
     pathtracer->set_camera();
 
-    size = window_width * window_height;
+//    size = window_width * window_height;
     
     // Display
     initialize(argc, argv);
+    
+//    for(int i = 0; i < 10; i++) {
+//        pathtracer->fake_render();
+//    }
+//    
+//    Bitmap bm;
+//    bm.width = pathtracer->get_width();
+//    bm.height = pathtracer->get_height();
+//    bm.pixels = pathtracer->get_image();
+//    std::string path = "../../writeup/images/image"+ std::to_string(pathtracer->get_iterations())
+//    + ".png";
+//    save_png_to_file(&bm,path.c_str());
     
     return 0;
 }
@@ -118,26 +133,54 @@ void display() {
     glVertex3f (0.0, 0.0, 0.0);
     glEnd ();
     
+    glColor4f(0.0, 0.0, 0.0, 0.0);
 	glColor4f(1.0, 1.0, 1.0, 1.0);
-    
+
     glutSwapBuffers();
     
     //no redraw when debugging
     glutPostRedisplay();
 }
 
+void keyboard( unsigned char key, int /*x*/, int /*y*/)
+{
+    switch( key) {
+        case('q') :
+        {
+            Bitmap bm;
+            bm.width = pathtracer->get_width();
+            bm.height = pathtracer->get_height();
+            bm.pixels = pathtracer->get_image();
+            std::string path = "../../writeup/images/image"+ std::to_string(pathtracer->get_iterations())
+            + ".png";
+            save_png_to_file(&bm,path.c_str());
+            exit(0);
+        }
+        case('p'):
+        {
+            Bitmap bm;
+            bm.width = pathtracer->get_width();
+            bm.height = pathtracer->get_height();
+            bm.pixels = pathtracer->get_image();
+            std::string path = "../../writeup/images/image"+ std::to_string(pathtracer->get_iterations())
+            + ".png";
+            save_png_to_file(&bm,path.c_str());
+        }
+    }
+}
+
 void initialize(int argc, char**argv) {
-    
+//    glutDestroyWindow(glutGetWindow());
     glutInit(&argc, argv);
     
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
     glutInitWindowSize(window_width, window_height);
-    glutCreateWindow("brian's pathtracer");
+    glutCreateWindow("brian's pathtrafasd");
     
     initGL();
     
     glutDisplayFunc(display);
-     
+    glutKeyboardFunc(keyboard);
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.0, 0.0, 0.0, 1.0);
     
@@ -178,6 +221,8 @@ bool initGL() {
     
     // Enable textures:
     glEnable(GL_TEXTURE_2D);
+    
+    //clGetDeviceInfo(deviceID, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(cl_ulong), &size, 0);
     
     return true;
 }

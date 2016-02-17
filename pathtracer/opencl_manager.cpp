@@ -71,7 +71,7 @@ int OpenCL_Manager::initialize() {
     
     return 0;
 }
-    
+
 int OpenCL_Manager::kernel_load(std::string file_name,
     std::string kernel_name) {
     
@@ -142,6 +142,7 @@ int OpenCL_Manager::kernel_execute(Primitive *primitives, Camera *camera, int n_
     // [ Local ]
     cl::LocalSpaceArg local_prim_buff = cl::Local(sizeof(Primitive)*n_primitives);
     cl::LocalSpaceArg local_mat_buff = cl::Local(sizeof(Material)*n_materials);
+    cl::LocalSpaceArg local_tri_buff = cl::Local(sizeof(Triangle)*n_triangles);
     
     // [ Command Queue ]
     m_queue = cl::CommandQueue(m_context,m_device);
@@ -185,13 +186,14 @@ int OpenCL_Manager::kernel_execute(Primitive *primitives, Camera *camera, int n_
     // Locals
     clcheck(m_kernel.setArg(6,local_prim_buff),"Local Primitives");
     clcheck(m_kernel.setArg(7,local_mat_buff),"Local Materials");
+    clcheck(m_kernel.setArg(8,local_tri_buff),"Local Triangles");
     // Scalars
-    clcheck(m_kernel.setArg(8,width),"set width");
-    clcheck(m_kernel.setArg(9,height),"set height");
-    clcheck(m_kernel.setArg(10,iterations),"set iterations");
-    clcheck(m_kernel.setArg(11,n_triangles),"set n_triangles");
-    clcheck(m_kernel.setArg(12,n_materials),"set n_materials");
-    clcheck(m_kernel.setArg(13,n_primitives),"set n_primitives");
+    clcheck(m_kernel.setArg(9,width),"set width");
+    clcheck(m_kernel.setArg(10,height),"set height");
+    clcheck(m_kernel.setArg(11,iterations),"set iterations");
+    clcheck(m_kernel.setArg(12,n_triangles),"set n_triangles");
+    clcheck(m_kernel.setArg(13,n_materials),"set n_materials");
+    clcheck(m_kernel.setArg(14,n_primitives),"set n_primitives");
     
     int global_size, size = width*height;
     
