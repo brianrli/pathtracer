@@ -30,7 +30,7 @@ Material create_material() {
     return material;
 }
 
-// Triangle Constructor
+// [ Triangles ]
 Triangle create_triangle() {
     Triangle triangle;
     triangle.v1 = (cl_float3){0,0,0};
@@ -67,9 +67,6 @@ Pathtracer::Pathtracer() {
 
     width = 720;
     height = 720;
-//
-//    width = 480;
-//    height = 480;
     
     iterations = 0;
     
@@ -101,7 +98,9 @@ int Pathtracer::get_iterations(){
 }
 
 // fake render
-Pixel* Pathtracer::fake_render() {
+Pixel* Pathtracer::render() {
+    
+    // [ build bounding volume hierarchy ]
     
     // testing
     Pixel *image = new Pixel[width*height];
@@ -182,25 +181,10 @@ void printclf3(cl_float3 f) {
 
 int Pathtracer::set_triangles(std::vector<Vec3f> vertices) {
     
-//    n_triangles = 1;
-//    triangles = (Triangle*)malloc(sizeof(Triangle) * n_triangles);
-//    triangles[0] = create_triangle();
-    
     // debugging purposes
     n_triangles = 2;
     triangles = (Triangle*)malloc(sizeof(Triangle) * n_triangles);
-    triangles[0] = create_triangle();
-    triangles[0].v1 = (cl_float3){-0.3,0,0};
-    triangles[0].v3 = (cl_float3){-0.25,-0.1,0.1};
-    triangles[0].v2 = (cl_float3){-0.25,0.1,0};
-    triangles[0].material = (cl_float3){0,0,0};
-    
-    triangles[1] = create_triangle();
-    triangles[1].v1 = (cl_float3){-0.2,0,0.2};
-    triangles[1].v3 = (cl_float3){-0.25,-0.1,0.1};
-    triangles[1].v2 = (cl_float3){-0.25,0.1,0};
-    triangles[1].material = (cl_float3){0,0,0};
-    
+
 //     has to be divisible by three
     if ((vertices.size() % 3) != 0 ){
         return 0;
@@ -212,9 +196,12 @@ int Pathtracer::set_triangles(std::vector<Vec3f> vertices) {
     
     int index = 0;
     
+    // initialize triangles
     for (int i = 0; i < vertices.size(); i += 3) {
         triangles[index] = create_triangle(vertices[i],vertices[i+1],
                                        vertices[i+2]);
+        vector_triangles.push_back(VectorTriangle(vertices[i],vertices[i+1],
+                                                  vertices[i+2]));
         index++;
     }
     
@@ -271,4 +258,10 @@ int Pathtracer::set_scene() {
 //    primitives[3].refractive = {1.1,0,0,1};
     
     return 1;
+}
+
+void Pathtracer::set_bvh() {
+    bvh = BoundingVolumeHierarchy(vector_triangles);
+    bvh.buildTree();
+    return;
 }

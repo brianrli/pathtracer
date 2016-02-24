@@ -7,11 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C712D4DA1C794488004B1591 /* bvh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C712D4D81C794488004B1591 /* bvh.cpp */; };
 		C736B9BA1BB4D04500E25468 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C736B9B91BB4D04500E25468 /* OpenGL.framework */; };
 		C745117E1BB9E99500CF4C3D /* boost.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C745117D1BB9E99500CF4C3D /* boost.framework */; };
 		C74DF08D1B9FBC7F0002CA28 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C74DF08C1B9FBC7F0002CA28 /* main.cpp */; };
 		C74DF0941B9FBCD80002CA28 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C74DF0931B9FBCD80002CA28 /* OpenCL.framework */; };
-		C7AFA2B31BCDD419003A5C5D /* common.hpp in Sources */ = {isa = PBXBuildFile; fileRef = C736B9B71BB4BB2000E25468 /* common.hpp */; };
 		C7AFA2B41BCDD419003A5C5D /* pathtracer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C736B9B41BB4BB1700E25468 /* pathtracer.cpp */; };
 		C7AFA2B51BCDD419003A5C5D /* opencl_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C78DFD731BB0601900E58B64 /* opencl_manager.cpp */; };
 		C7AFA2B61BCDD419003A5C5D /* png_writer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C736B9AD1BB3864400E25468 /* png_writer.cpp */; };
@@ -32,6 +32,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C712D4D81C794488004B1591 /* bvh.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = bvh.cpp; sourceTree = "<group>"; };
+		C712D4D91C794488004B1591 /* bvh.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = bvh.hpp; sourceTree = "<group>"; };
 		C736B9AD1BB3864400E25468 /* png_writer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = png_writer.cpp; sourceTree = "<group>"; };
 		C736B9AE1BB3864400E25468 /* png_writer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = png_writer.hpp; sourceTree = "<group>"; };
 		C736B9B41BB4BB1700E25468 /* pathtracer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pathtracer.cpp; sourceTree = "<group>"; };
@@ -89,6 +91,8 @@
 				C736B9B81BB4CFDC00E25468 /* vecmath */,
 				C74DF08C1B9FBC7F0002CA28 /* main.cpp */,
 				C736B9B71BB4BB2000E25468 /* common.hpp */,
+				C712D4D81C794488004B1591 /* bvh.cpp */,
+				C712D4D91C794488004B1591 /* bvh.hpp */,
 				C736B9B41BB4BB1700E25468 /* pathtracer.cpp */,
 				C736B9B51BB4BB1700E25468 /* pathtracer.hpp */,
 				C78DFD731BB0601900E58B64 /* opencl_manager.cpp */,
@@ -170,11 +174,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				C7B4E7CA1C148C3E00AC8238 /* obj_reader.cpp in Sources */,
-				C7AFA2B31BCDD419003A5C5D /* common.hpp in Sources */,
 				C7AFA2B41BCDD419003A5C5D /* pathtracer.cpp in Sources */,
 				C7AFA2B51BCDD419003A5C5D /* opencl_manager.cpp in Sources */,
 				C7AFA2B61BCDD419003A5C5D /* png_writer.cpp in Sources */,
 				C74DF08D1B9FBC7F0002CA28 /* main.cpp in Sources */,
+				C712D4DA1C794488004B1591 /* bvh.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

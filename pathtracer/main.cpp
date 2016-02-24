@@ -1,11 +1,16 @@
-// =======================================
-// ===[A C K N O W L E D G E M E N T S]===
+// ========================================
+// ===[A C K N O W L E D G E M E N T S]====
 //The GUI code is taken from Peter and Karl's GPU Pathtracer
 //https://github.com/peterkutz/GPUPathTracer
 
 //The OBJ Reader code is modified from:
 //http://www.opengl-tutorial.org/beginners-tutorials/tutorial-7-model-loading/
-// =======================================
+
+//The Bounding Volume Hierarchy Code is modified
+//from pbrt-v2
+//https://github.com/mmp/pbrt-v2
+
+// =========================================
 
 // =========================================
 // ===[B R I A N'S  P A T H  T R A C E R]===
@@ -27,19 +32,16 @@
 
 #define PATH_TRACER_BITMAP 13
 
+// constants
 Pathtracer *pathtracer = NULL;
 int window_height = 720;
 int window_width = 720;
 int size = window_height * window_width;
 int iterations = 0;
 
-//forward declarations
+// forward declarations
 void initialize(int argc, char**argv);
 bool initGL();
-
-//float clip(float n, float lower, float upper) {
-//    return std::max(lower, std::min(n, upper));
-//}
 
 void errorm(std::string error_message) {
     std::cout << error_message << std::endl;
@@ -55,8 +57,6 @@ int main(int argc, char **argv) {
     // Triangles
     std::vector<Vec3f> vertices;
     
-//    pathtracer->set_triangles(vertices);
-    
     if(load_obj("objs/cube.obj",vertices)) {
         if (!pathtracer->set_triangles(vertices))
             errorm("Couldn't set the triangles.");
@@ -70,23 +70,12 @@ int main(int argc, char **argv) {
     
     // Camera
     pathtracer->set_camera();
-
-//    size = window_width * window_height;
+    
+    // Bounding Volume Hierarchy
+    pathtracer->set_bvh();
     
     // Display
-    initialize(argc, argv);
-    
-//    for(int i = 0; i < 10; i++) {
-//        pathtracer->fake_render();
-//    }
-//    
-//    Bitmap bm;
-//    bm.width = pathtracer->get_width();
-//    bm.height = pathtracer->get_height();
-//    bm.pixels = pathtracer->get_image();
-//    std::string path = "../../writeup/images/image"+ std::to_string(pathtracer->get_iterations())
-//    + ".png";
-//    save_png_to_file(&bm,path.c_str());
+    //initialize(argc, argv);
     
     return 0;
 }
@@ -98,7 +87,7 @@ void display() {
     std::clock_t start = std::clock();
     double duration;
     
-    Pixel *f_pixels = pathtracer->fake_render();
+    Pixel *f_pixels = pathtracer->render();
     float* pixels = (float*)f_pixels;
     
     duration = (std::clock()-start)/(double) CLOCKS_PER_SEC;

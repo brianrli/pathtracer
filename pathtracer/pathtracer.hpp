@@ -6,10 +6,14 @@
 #include <vector>
 #include "common.hpp"
 #include "opencl_manager.hpp"
+#include "bvh.hpp"
 
 class Pathtracer {
 
 private:
+    // build bvh
+    void construct_bvh();
+
     Primitive *primitives;
     Triangle *triangles;
     Material *materials;
@@ -24,7 +28,9 @@ private:
     int width;
     int height;
     int iterations;
-
+    
+    BoundingVolumeHierarchy bvh;
+    std::vector<VectorTriangle> vector_triangles;
 public:
     Pathtracer();
 
@@ -32,8 +38,9 @@ public:
     // use fake scene for now
     int set_scene();
     int set_camera();
+    void set_bvh();
     int set_triangles(std::vector<Vec3f> vertices);
-    Pixel* fake_render();
+    Pixel* render();
     
     // getters
     int get_width();
