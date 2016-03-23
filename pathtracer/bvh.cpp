@@ -10,27 +10,41 @@
 
 using namespace std;
 
+std::vector<VectorTriangle> BoundingVolumeHierarchy::get_triangles() {
+    return orderedvtriangles;
+};
+
+BVH_Node* BoundingVolumeHierarchy::get_bvh(){
+    if(bvh_initialized) {
+        return bvh;
+    }
+    return NULL;
+};
+
+int BoundingVolumeHierarchy::get_n_nodes() {
+    return totalNodes;
+};
+
 void inorder(TreeNode *node,
              std::vector<VectorTriangle> triangles) {
-    if(node->children[0] != NULL) {
-        inorder(node->children[0],triangles);
-    }
-
-    if (node->children[0] == NULL || node->children[1] == NULL) {
-        cout << "Child | index: " << node->index << " | nPrimitives: " << node->nPrimitives << "\n";
-    }
-    else {
-        cout << "Central Node\n";
-    }
-    
-    if(node->children[1] != NULL) {
-        inorder(node->children[1],triangles);
-    }
+//    if(node->children[0] != NULL) {
+//        inorder(node->children[0],triangles);
+//    }
+//
+//    if (node->children[0] == NULL || node->children[1] == NULL) {
+//        cout << "Child | index: " << node->index << " | nPrimitives: " << node->nPrimitives << "\n";
+//    }
+//    else {
+//        cout << "Central Node\n";
+//    }
+//    
+//    if(node->children[1] != NULL) {
+//        inorder(node->children[1],triangles);
+//    }
 }
 
 void BoundingVolumeHierarchy::buildTree() {
     
-
 	int start = 0;
 	int end = vtriangles.size();
 
@@ -51,16 +65,19 @@ void BoundingVolumeHierarchy::buildTree() {
     // flatten tree
     int offset = 0;
     flattenTree(root,&offset);
-    for(int i = 0; i < totalNodes; i++) {
-        cout << i << " : ";
-        cout << bvh[i].nPrimitives << " ";
-        if (bvh[i].nPrimitives == 0) {
-            cout << bvh[i].offset << " ";
-            cout << bvh[i].secondChildOffset << " ";
-        }
-        cout << "\n";
-    }
+//    for(int i = 0; i < totalNodes; i++) {
+//        cout << i << " : ";
+//        cout << bvh[i].nPrimitives << " ";
+//        if (bvh[i].nPrimitives == 0) {
+//            cout << bvh[i].offset << " ";
+//            cout << bvh[i].secondChildOffset << " ";
+//        }
+//        cout << "\n";
+//    }
 //    cout << "finished\n";
+    bvh_initialized = true;
+//    cout << totalNodes << "\n";
+//    cout << "number of triangles: " << orderedvtriangles.size() << "\n";
 };
 
 // initialize new leaf in bvh tree
@@ -88,11 +105,11 @@ TreeNode* BoundingVolumeHierarchy::recBuildTree(int start, int end) {
 
 	// compute bounding box
 	BoundingBox bounds = vtriangles[start].bbox;
-    
 	for (int i = start+1; i < end; i++) {
+//        vtriangles[i].bbox.print();
 		bounds = combine(bounds,vtriangles[i].bbox);
 	}
-
+    
 	int nprimitives = end - start;
 	// only one triangle left, so create leaf
 	if (nprimitives == 1) {
@@ -138,6 +155,9 @@ TreeNode* BoundingVolumeHierarchy::recBuildTree(int start, int end) {
 		// Split using Surface Area Heuristic
 		if (false) {
 			// Partition primitives into equally sized subsets
+//            mid = (start+end)/2;
+//            std::nth_element(&vtriangles[start], &vtriangles[mid],
+//                             &vtriangles[end-1]+1, ComparePoints(dim));
 		}
 		else {
             //cout << "SAH Construction Start\n";
@@ -197,7 +217,12 @@ TreeNode* BoundingVolumeHierarchy::recBuildTree(int start, int end) {
 					}
 					count1 += sah.count[k];
 				}
-
+                
+//                cout <<  bounds.surfaceArea() << " " << b0.surfaceArea() << " " << b1.surfaceArea() << "\n";
+//                b0.print();
+//                b1.print();
+//                cout << "\n";
+                
 				// surface area cost determination
 				sah.cost[i] = 0.125f + (count0 * b0.surfaceArea() + 
 					count1 * b1.surfaceArea()) / bounds.surfaceArea();
@@ -217,6 +242,8 @@ TreeNode* BoundingVolumeHierarchy::recBuildTree(int start, int end) {
 			// create Splits
 			if(nprimitives > MAX_TRIANGLES_LEAF || bestCost < nprimitives) {
 				
+//                cout << bestCost << " vs " << nprimitives << "\n";
+                
                 //cout << "create splits with SAH\n";
                 
 				std::vector<VectorTriangle> pre;
@@ -248,6 +275,7 @@ TreeNode* BoundingVolumeHierarchy::recBuildTree(int start, int end) {
 
 			// create leaf
 			else {
+                
 				createLeaf(node,bounds,vtriangles,orderedvtriangles,start,end);
 				return node;
 			}			

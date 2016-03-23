@@ -19,7 +19,8 @@ public:
     int kernel_execute(Primitive *primitives, Camera *camera, int n_primitives,
                        Pixel *image, int width, int height, int* seed_memory,
                        int iterations, Triangle *triangles, int n_triangles,
-                       Material *materials, int n_materials);
+                       Material *materials, int n_materials,
+                       BVH_Node *nodes, int n_nodes);
     
 private:
     cl::Platform m_platform;

@@ -7,7 +7,7 @@ typedef float4 Vector;
 // Constants
 __constant int MAXDEPTH = 15;
 __constant float ONE_THIRD_RT = 0.57735026919f;
-__constant Vector BACKGROUND_COLOR = {0.5f,0.5f,0.5f,0.0f};
+__constant Vector BACKGROUND_COLOR = {0.8f,0.9f,0.95f,0.0f};
 
 
 // ===[ Debugging ]===
@@ -21,7 +21,9 @@ void print_vec2(Vector vec, Vector vec1) {
     printf("x: %f y: %f z: %f w: %f | x: %f y: %f z: %f w: %f\n",
            vec.x,vec.y,vec.z,vec.w, vec1.x,vec1.y,vec1.z,vec1.w);
 }
-
+void print_float3(float3 vec) {
+    printf("x: %f y: %f z: %f ",vec.x,vec.y,vec.z);
+}
 
 // ===[ Pixel ]===
 typedef struct {
@@ -68,6 +70,16 @@ Vector point_at(Ray r, float t) {
     return r.origin + (r.direction * t);
 };
 
+// ===[ Bounding Volume Hierarchy ]===
+typedef struct {
+    float3 minbounds;
+    float3 maxbounds;
+    short offset;
+    short secondChildOffset;
+    short nPrimitives;
+    short axis;
+} BVH_Node;
+
 // ===[ Triangle ]===
 typedef struct {
     float3 v1;
@@ -75,6 +87,21 @@ typedef struct {
     float3 v3;
     float3 material;
 } Triangle;
+
+void print_triangle(Triangle tri);
+void print_triangle(Triangle tri) {
+    print_float3(tri.v1);
+    print_float3(tri.v2);
+    print_float3(tri.v3);
+    printf("\n");
+}
+
+void print_triangle2(Triangle tri, Triangle tri2);
+void print_triangle2(Triangle tri, Triangle tri2) {
+    print_triangle(tri);
+    print_triangle(tri2);
+    printf("\n");
+}
 
 typedef struct {
     Vector refractive;
@@ -202,9 +229,140 @@ typedef struct {
     bool is_triangle;
 } Isect;
 
-// intersect Triangles (moller trumbore);
-bool intersect_tri(Ray *r, local Triangle *tri, float *t, Isect *isect);
-bool intersect_tri(Ray *r, local Triangle *tri, float *t, Isect *isect) {
+// ===[ Intersect Triangles (Moller Trumbore) ]===
+// forward declaration
+bool intersect_tri(Ray *r, global Triangle *tri, float *t, Isect *isect);
+
+// WITH ACCELERATION
+bool intersectBox(Ray *r, float3 minbounds, float3 maxbounds, Vector invDir,
+    bool dirIsNeg[3], float t);
+bool intersectBox(Ray *r, float3 minbounds, float3 maxbounds, Vector invDir,
+    bool dirIsNeg[3], float t) {
+
+    // Check for ray intersection against x and y slabs
+    float tmin, tmax, tymin, tymax, tzmin, tzmax;
+
+    // x slab
+    if (dirIsNeg[0]) {
+        tmin = (maxbounds.x - (*r).origin.x) * invDir.x;
+        tmax = (minbounds.x - (*r).origin.x) * invDir.x;
+    }
+    else {
+        tmin = (minbounds.x - (*r).origin.x) * invDir.x;
+        tmax = (maxbounds.x - (*r).origin.x) * invDir.x;
+    }
+
+    // y slab
+    if (dirIsNeg[1]) {
+        tymin = (maxbounds.y - (*r).origin.x) * invDir.y;
+        tymax = (minbounds.y - (*r).origin.x) * invDir.y;
+    }
+    else {
+        tymin = (minbounds.y - (*r).origin.y) * invDir.y;
+        tymax = (maxbounds.y - (*r).origin.y) * invDir.y;
+    }
+    
+
+
+    if ((tmin > tymax) || (tymin > tmax))
+        return false;
+
+    if (tymin > tmin) tmin = tymin;
+    if (tymax < tmax) tmax = tymax;
+
+    // Check for ray intersection against z slab
+    if (dirIsNeg[2]) {
+        tzmin = (maxbounds.z - (*r).origin.z) * invDir.z;
+        tzmax = (minbounds.z - (*r).origin.z) * invDir.z;
+    }
+    else {
+        tzmin = (minbounds.z - (*r).origin.z) * invDir.z;
+        tzmax = (maxbounds.z - (*r).origin.z) * invDir.z;
+    }
+    
+   
+    
+    if ((tmin > tzmax) || (tzmin > tmax))
+        return false;
+    
+    if (tzmin > tmin)
+        tmin = tzmin;
+    
+    if (tzmax < tmax)
+        tmax = tzmax;
+    
+    // no mint ~~
+//     printf("%f %f\n",tmin, t);
+    return (tmin < t) && (tmax > EPSILON);
+}
+
+bool intersect_tri_bvh(Ray *r, global Triangle *triangles, int n_triangles, float *t, Isect *isect,
+                       global BVH_Node *bvh, int n_nodes);
+bool intersect_tri_bvh(Ray *r, global Triangle *triangles, int n_triangles, float *t, Isect *isect,
+                       global BVH_Node *bvh, int n_nodes) {
+    
+
+    int current = 0; // position in stack
+    int nodeNum = 0;
+    int todo[64];
+
+    bool hit = false;
+
+    // for special bounding box intersection algorithm
+    Vector invDir = (float4){1.f/(*r).direction.x,
+        1.f/(*r).direction.y,
+        1.f/(*r).direction.z,
+        0.0f};
+
+    bool dirIsNeg[3] = {invDir.x < 0, invDir.y < 0, invDir.z < 0};
+    //printf("%d %d %d\n",dirIsNeg[0],dirIsNeg[1],dirIsNeg[2]);
+    
+    // intersect loop
+    while (true) {
+
+        // if inside bounding box
+        if (intersectBox(r, bvh[nodeNum].minbounds, bvh[nodeNum].maxbounds,
+                         invDir,dirIsNeg,*t)) {
+            
+            // if leaf node
+            if(bvh[nodeNum].nPrimitives > 0) {
+                
+                for (int i = 0; i < bvh[nodeNum].nPrimitives; i++) {
+                    
+                    if(intersect_tri(r,&triangles[bvh[nodeNum].offset + i],t,isect)) {
+                        hit = true;
+                    }
+                }
+
+                if (current == 0) break;
+                nodeNum = todo[--current];
+                
+            }
+            // if interior node
+            else {
+                // process children by how close they are
+                if(dirIsNeg[bvh[nodeNum].axis]) {
+                    todo[current++] = nodeNum+1;
+                    nodeNum = bvh[nodeNum].secondChildOffset;
+                }
+                // 
+                else {
+                    todo[current++] = bvh[nodeNum].secondChildOffset;
+                    nodeNum++;
+                }
+            }
+        }
+        // missed bounding box
+        else {
+            if (current == 0) break;
+            nodeNum = todo[--current];
+        }
+    }
+    return hit;
+}
+
+// WITHOUT ACCELERATION
+bool intersect_tri(Ray *r, global Triangle *tri, float *t, Isect *isect) {
     
     float3 edge1 = tri->v2 - tri->v1; //edge1
     float3 edge2 = tri->v3 - tri->v1; //edge2
@@ -455,11 +613,11 @@ Ray handle_refractive(Isect isect, Ray r, Material m) {
 // render loop
 //Vector pathtrace(Ray ray,global Primitive *primitives, int n_primitives) {
 Vector pathtrace(Ray ray,local Primitive *primitives, int n_primitives,
-                 local Triangle *triangles, int n_triangles, local Material *materials,
-                 int n_materials, int *seed);
+                 global Triangle *triangles, int n_triangles, local Material *materials,
+                 int n_materials, global BVH_Node *bvh, int n_nodes, int *seed);
 Vector pathtrace(Ray ray,local Primitive *primitives, int n_primitives,
-                 local Triangle *triangles, int n_triangles, local Material *materials,
-                 int n_materials, int *seed) {
+                 global Triangle *triangles, int n_triangles, local Material *materials,
+                 int n_materials, global BVH_Node *bvh, int n_nodes, int *seed) {
     
     // intersection
     Vector color = {0.0f,0.0f,0.0f,0.0f};
@@ -483,11 +641,30 @@ Vector pathtrace(Ray ray,local Primitive *primitives, int n_primitives,
                 found_intersect = true;
             }
         }
-        for (int i = 0; i < n_triangles; i++) {
-            if(intersect_tri(&r,&(triangles[i]),&t,&isect)) {
-                found_intersect = true;
-            }
+        // Revise with Bounding Volume Hierarchy
+//        intersect_tri_bvh(Ray *r, local Triangle *triangles, int n_triangles, float *t, Isect *isect,
+//                          local BVH_Node *bvh, int n_nodes)
+
+        if(intersect_tri_bvh(&r,triangles,n_triangles,&t,&isect,bvh,n_nodes)) {
+            found_intersect = true;
         }
+        
+//        float t_test = 1000;
+//        Isect isect_test;
+//        isect_test.is_triangle = false;
+//        Ray r_test = r;
+//        r_test.t = 1000;
+//        bool hit = intersect_tri_bvh(&r_test, triangles, n_triangles, &t_test, &isect_test, bvh, n_nodes);
+//        
+//        for (int i = 0; i < n_triangles; i++) {
+//            if(intersect_tri(&r,&(triangles[i]),&t,&isect)) {
+//                found_intersect = true;
+//            }
+//        }
+        
+//        if(hit) {
+//            print_triangle2(isect_test.triangle,isect.triangle);
+//        }
         
         // [ Process Intersection ]
         if (found_intersect) {
@@ -563,36 +740,44 @@ Vector pathtrace(Ray ray,local Primitive *primitives, int n_primitives,
 __kernel void pathtracer_kernel(const __global float4* global_primitives,
                                 const __global float4* global_triangles,
                                 const __global float4* global_materials,
+                                const __global float4* global_bvh,
                                 __global Pixel* image,
                                 __global int* seed_memory,
                                 __global Camera* camera,
                                 __local float4* local_primitives,
                                 __local float4* local_materials,
                                 __local float4* local_triangles,
+                                __local float4* local_bvh,
                                 int width,
                                 int height,
                                 int iteration,
                                 int n_triangles,
                                 int n_materials,
-                                int n_primitives) {
+                                int n_primitives,
+                                int n_nodes) {
 
     
     // perform copy from global to local memory
-    event_t events[3];
+    event_t events[2];
     events[0] = async_work_group_copy(local_primitives,
                                      global_primitives,
                                      (size_t) ((sizeof(Primitive) * n_primitives)/sizeof(float4)), 0);
     events[1] = async_work_group_copy(local_materials,
                                       global_materials,
                                       (size_t) ((sizeof(Material) * n_materials)/sizeof(float4)), 0);
-    events[2] = async_work_group_copy(local_triangles,
-                                      global_triangles,
-                                      (size_t) ((sizeof(Triangle) * n_triangles)/sizeof(float4)), 0);
+//    events[2] = async_work_group_copy(local_triangles,
+//                                      global_triangles,
+//                                      (size_t) ((sizeof(Triangle) * n_triangles)/sizeof(float4)), 0);
+//    events[3] = async_work_group_copy(local_bvh,
+//                                      global_bvh,
+//                                      (size_t) ((sizeof(BVH_Node) * n_nodes)/sizeof(float4)), 0);
+    
 
-    wait_group_events(3, events);
+    wait_group_events(4, events);
     local Primitive *primitives = (local Primitive*) local_primitives;
     local Material *materials = (local Material*) local_materials;
-    local Triangle *triangles = (local Triangle*) local_triangles;
+//    local Triangle *triangles = (local Triangle*) local_triangles;
+//    local BVH_Node *bvh = (local BVH_Node*) local_bvh;
     
     Pixel pixel;
     Vector color;
@@ -605,6 +790,10 @@ __kernel void pathtracer_kernel(const __global float4* global_primitives,
     if (gid >= width * height) {
         return;
     }
+    
+    // debugging
+//    print_vec(bvh[0].minbounds);
+//    print_vec(bvh[0].maxbounds);
     
     // ======[ Stratified Jittering ]======
     // Monte Carlo == Create a Random Number
@@ -638,8 +827,10 @@ __kernel void pathtracer_kernel(const __global float4* global_primitives,
     
     // ray trace
     color = pathtrace(ray,primitives,n_primitives,
-                      triangles,n_triangles,
-                      materials,n_materials,&seed);
+                      global_triangles,n_triangles,
+                      materials,n_materials,
+                      global_bvh,n_nodes,
+                      &seed);
     setPixel(&pixel,color);
     
     seed_memory[gid] = seed;

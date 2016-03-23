@@ -26,12 +26,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "pathtracer/pathtracer_kernel.cl"
-            timestampString = "472459053.764301"
+            timestampString = "478052657.292154"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "646"
-            endingLineNumber = "646"
-            landmarkName = "pathtracer_kernel()"
+            startingLineNumber = "712"
+            endingLineNumber = "712"
+            landmarkName = "pathtrace()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -62,11 +62,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "pathtracer/bvh.cpp"
-            timestampString = "478036682.232969"
+            timestampString = "478040593.191733"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "44"
-            endingLineNumber = "44"
+            startingLineNumber = "58"
+            endingLineNumber = "58"
             landmarkName = "BoundingVolumeHierarchy::buildTree()"
             landmarkType = "5">
          </BreakpointContent>
@@ -92,11 +92,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "pathtracer/bvh.cpp"
-            timestampString = "478036950.844825"
+            timestampString = "478485068.473757"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "122"
-            endingLineNumber = "122"
+            startingLineNumber = "139"
+            endingLineNumber = "139"
             landmarkName = "BoundingVolumeHierarchy::recBuildTree(int start, int end)"
             landmarkType = "5">
          </BreakpointContent>
@@ -108,11 +108,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "pathtracer/bvh.hpp"
-            timestampString = "477970408.37738"
+            timestampString = "478038301.762827"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "41"
-            endingLineNumber = "41">
+            startingLineNumber = "33"
+            endingLineNumber = "33">
             <Locations>
                <Location
                   shouldBeEnabled = "No"

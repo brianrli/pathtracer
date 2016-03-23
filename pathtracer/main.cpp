@@ -52,12 +52,14 @@ void errorm(std::string error_message) {
 int main(int argc, char **argv) {
 
     // [ create pathtracer ]
-    pathtracer = new Pathtracer();
+    pathtracer = new Pathtracer(window_width,
+                                window_height);
     
     // Triangles
     std::vector<Vec3f> vertices;
+    pathtracer->set_triangles(vertices);
     
-    if(load_obj("objs/cube.obj",vertices)) {
+    if(load_obj("objs/gourd.obj",vertices)) {
         if (!pathtracer->set_triangles(vertices))
             errorm("Couldn't set the triangles.");
     }
@@ -71,11 +73,8 @@ int main(int argc, char **argv) {
     // Camera
     pathtracer->set_camera();
     
-    // Bounding Volume Hierarchy
-    pathtracer->set_bvh();
-    
     // Display
-    //initialize(argc, argv);
+    initialize(argc, argv);
     
     return 0;
 }
@@ -164,7 +163,7 @@ void initialize(int argc, char**argv) {
     
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
     glutInitWindowSize(window_width, window_height);
-    glutCreateWindow("brian's pathtrafasd");
+    glutCreateWindow("brian's ultimate pathtracer");
     
     initGL();
     

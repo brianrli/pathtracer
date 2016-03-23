@@ -59,14 +59,14 @@ void set(cl_float4 &dst, Vec4f vec) {
 }
 
 // constructor
-Pathtracer::Pathtracer() {
+Pathtracer::Pathtracer(int w, int h) {
     ocl_manager = new OpenCL_Manager();
     ocl_manager->initialize();
     ocl_manager->kernel_load("pathtracer_kernel.cl",
                              "pathtracer_kernel");
 
-    width = 720;
-    height = 720;
+    width = w;
+    height = h;
     
     iterations = 0;
     
@@ -108,10 +108,10 @@ Pixel* Pathtracer::render() {
     // [ Path Trace !! ]
     ocl_manager->kernel_execute(primitives,camera,n_primitives,
                                 image,width,height,seed_memory,iterations,
-                                triangles,n_triangles,materials,n_materials);
+                                triangles,n_triangles,materials,n_materials,
+                                bvh_nodes,n_nodes); // new bvh additions
     
     iterations++;
-    
     
     // [ Accumulate Contributions ]
     if(iterations > 1) {
@@ -142,9 +142,10 @@ int Pathtracer::set_camera() {
     
     // defaults for now
 //    {0.3,0.7,-0.7,0}
-    Vec4f lookat = Vec4f(0,0,0,0);
+    Vec4f lookat = Vec4f(0,0.3,0,0);
 //    Vec4f eye = Vec4f(0,0,-3,0);
     Vec4f eye = Vec4f(2.0,-0.9,-3,0);
+    eye = Vec4f(0,0.6,-3.0,0);
 
     Vec4f most_perpendicular;
     Vec4f look_vec = lookat - eye;
@@ -181,28 +182,44 @@ void printclf3(cl_float3 f) {
 
 int Pathtracer::set_triangles(std::vector<Vec3f> vertices) {
     
-    // debugging purposes
-    n_triangles = 2;
-    triangles = (Triangle*)malloc(sizeof(Triangle) * n_triangles);
-
-//     has to be divisible by three
+    // LOL REALLY BAD PRACTICE DO NOT DO THIS
+//    n_triangles = 1;
+//    n_nodes = 1;
+//    triangles = (Triangle*)malloc(sizeof(Triangle) * n_triangles);
+//    bvh_nodes = (BVH_Node*)malloc(sizeof(BVH_Node) * n_nodes);
+//    triangles[0] = create_triangle(ovt[i].v1,ovt[i].v2,ovt[i].v3)
+    
+    if (vertices.size() == 0) {
+        std::cout << "no vertices\n";
+        return 0;
+    }
+    
+    // has to be divsible by three
     if ((vertices.size() % 3) != 0 ){
         return 0;
     }
     
-    // [ Triangle ]
-    n_triangles = vertices.size() / 3;
-    triangles = (Triangle*)malloc(sizeof(Triangle) * n_triangles);
-    
-    int index = 0;
-    
     // initialize triangles
     for (int i = 0; i < vertices.size(); i += 3) {
-        triangles[index] = create_triangle(vertices[i],vertices[i+1],
-                                       vertices[i+2]);
         vector_triangles.push_back(VectorTriangle(vertices[i],vertices[i+1],
                                                   vertices[i+2]));
-        index++;
+    }
+    
+    // build Bounding Volume Hierarchy
+    bvh_constructor = BoundingVolumeHierarchy(vector_triangles);
+
+    bvh_constructor.buildTree();
+    
+    bvh_nodes = bvh_constructor.get_bvh();
+    n_nodes = bvh_constructor.get_n_nodes();
+
+    // [ Triangle ]
+    std::vector<VectorTriangle> ovt = bvh_constructor.get_triangles();
+    n_triangles = vertices.size() / 3;
+    
+    triangles = (Triangle*)malloc(sizeof(Triangle) * n_triangles);
+    for (int i = 0; i < ovt.size(); i++) {
+        triangles[i] = create_triangle(ovt[i].v1,ovt[i].v2,ovt[i].v3);
     }
     
     return 1;
@@ -218,36 +235,43 @@ int Pathtracer::set_scene() {
     materials[0].diffuse = {0.2,0.6,0.2,0.0};
     
     // [ Primitives ]
-    n_primitives = 2;
+    n_primitives = 5;
     primitives = (Primitive *) malloc(sizeof(Primitive)*n_primitives);
     
 //    // ground plane
     primitives[0] = create_primitive();
     primitives[0].type = {1,0,0};
-    primitives[0].center = {0,1,0,0};
+    primitives[0].center = {0,8,0,0};
     primitives[0].plane_normal = {0,-1,0,0};
-    primitives[0].diffuse = {0.3,0.3,0.3,0};
+    primitives[0].diffuse = {0.6,0.6,0.6,0};
+    
+    primitives[4] = create_primitive();
+    primitives[4].type = {1,0,0};
+    primitives[4].center = {0,0,1.5,0};
+    primitives[4].plane_normal = {0,0,1,0};
+    primitives[4].diffuse = {0.8,0.8,0.95,0};
 //
     // create light
     primitives[1] = create_primitive();
-    primitives[1].center = (cl_float4){-0.3,-0.7,0,0};
+    primitives[1].center = (cl_float4){-0.5,0.0,0,0};
     primitives[1].type = {0,0,0};
-    primitives[1].radius = .2;
-    primitives[1].emissive = {10,10,10,10};
+    primitives[1].radius = .1;
+    primitives[1].emissive = {6,6,6,6};
     
 //    // reflective sphere
-//    primitives[2] = create_primitive();
-//    primitives[2].type = {0,0,0};
-//    primitives[2].center = (cl_float4){0.0,0.4,0,0};
-//    primitives[2].radius = .4;
-//    primitives[2].specular = {0.7,0.7,0.2,0};
-//    primitives[2].refractive = {1.9,0,0,0.0};
-//    
-//    primitives[3] = create_primitive();
-//    primitives[3].type = {0,0,0};
-//    primitives[3].center = {0.8,0.7,0.3f,0};
-//    primitives[3].radius = .3f;
-//    primitives[3].diffuse = {0.8,0.8,0.8,0};
+    primitives[2] = create_primitive();
+    primitives[2].type = {0,0,0};
+    primitives[2].center = (cl_float4){-0.5,0.6,0,0};
+    primitives[2].radius = .4;
+    primitives[2].diffuse = {0.7,0.7,0.2,0};
+    primitives[2].specular = {0.7,0.7,0.2,0};
+    primitives[2].refractive = {1.9,0,0,0.0};
+//
+    primitives[3] = create_primitive();
+    primitives[3].type = {0,0,0};
+    primitives[3].center = {0.5,0.6,0.0f,0};
+    primitives[3].radius = .4f;
+    primitives[3].diffuse = {0.4,0.4,0.4,0};
     
 //
 //    // refractive sphere
@@ -258,10 +282,4 @@ int Pathtracer::set_scene() {
 //    primitives[3].refractive = {1.1,0,0,1};
     
     return 1;
-}
-
-void Pathtracer::set_bvh() {
-    bvh = BoundingVolumeHierarchy(vector_triangles);
-    bvh.buildTree();
-    return;
 }

@@ -20,25 +20,26 @@ private:
     Camera *camera;
     OpenCL_Manager *ocl_manager;
     Pixel* image_data;
+    BVH_Node *bvh_nodes;
     int* seed_memory;
     
     int n_primitives;
     int n_materials;
     int n_triangles;
+    int n_nodes;
     int width;
     int height;
     int iterations;
     
-    BoundingVolumeHierarchy bvh;
+    BoundingVolumeHierarchy bvh_constructor;
     std::vector<VectorTriangle> vector_triangles;
 public:
-    Pathtracer();
+    Pathtracer(int w, int h);
 
     // setters
     // use fake scene for now
     int set_scene();
     int set_camera();
-    void set_bvh();
     int set_triangles(std::vector<Vec3f> vertices);
     Pixel* render();
     

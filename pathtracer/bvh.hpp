@@ -5,7 +5,7 @@
 #include <vector>
 #include "common.hpp"
 
-const int MAX_TRIANGLES_LEAF = 2;
+const int MAX_TRIANGLES_LEAF = 24;
 const int NUM_BUCKETS = 12;
 
 struct TriangleInfo {
@@ -45,6 +45,7 @@ private:
     
     // Bounding Volume Hierarchy
     BVH_Node* bvh;
+    bool bvh_initialized;
 
     // for BVH construction
     int totalNodes;
@@ -55,8 +56,14 @@ public:
     BoundingVolumeHierarchy () {};
     BoundingVolumeHierarchy (std::vector<VectorTriangle> vt) {
         vtriangles = vt;
+        bvh_initialized = true;
+        totalNodes = 0;
     };
+    
     void buildTree();
+    std::vector<VectorTriangle> get_triangles();
+    BVH_Node* get_bvh();
+    int get_n_nodes();
 };
 
 #endif 

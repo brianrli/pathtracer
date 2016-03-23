@@ -69,7 +69,7 @@ struct BoundingBox {
 inline BoundingBox combine(BoundingBox b1, BoundingBox b2) {
     BoundingBox bbox;
     bbox.minbounds = minimum(b1.minbounds,b2.minbounds);
-    bbox.maxbounds = maximum(b1.minbounds,b2.minbounds);
+    bbox.maxbounds = maximum(b1.maxbounds,b2.maxbounds);
     return bbox;
 };
 
@@ -120,6 +120,16 @@ struct BVH_Node {
     cl_short axis;
 };
 
+struct BVH_Node_II {
+    cl_float minboundsx, minboundsy, minboundsz;
+    cl_float maxboundsx, maxboundsy, maxboundsz;
+    
+    cl_short offset;
+    cl_short secondChildOffset;
+    cl_short nPrimitives;
+    cl_short axis;
+};
+
 struct Primitive {
     cl_float4 refractive;
     cl_float4 specular;
@@ -137,6 +147,14 @@ struct Triangle {
     cl_float3 v2;
     cl_float3 v3;
     cl_float3 material;
+};
+
+
+struct Triangle_II {
+    cl_float v1x, v1y, v1z;
+    cl_float v2x, v2y, v2z;
+    cl_float v3x, v3y, v3z;
+    cl_float2 material;
 };
 
 struct Material {
