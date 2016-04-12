@@ -62,22 +62,42 @@ void BoundingVolumeHierarchy::buildTree() {
     
     inorder(root,vtriangles);
     
+    //make sure all are present
+    
+    
     // flatten tree
     int offset = 0;
     flattenTree(root,&offset);
-//    for(int i = 0; i < totalNodes; i++) {
-//        cout << i << " : ";
-//        cout << bvh[i].nPrimitives << " ";
-//        if (bvh[i].nPrimitives == 0) {
-//            cout << bvh[i].offset << " ";
-//            cout << bvh[i].secondChildOffset << " ";
-//        }
-//        cout << "\n";
-//    }
+    for(int i = 0; i < totalNodes; i++) {
+        cout << i << " : ";
+        cout << bvh[i].nPrimitives << " ";
+        if (bvh[i].nPrimitives == 0) {
+            cout << bvh[i].secondChildOffset << " ";
+        }
+        else {
+            cout << bvh[i].offset << " ";
+        }
+        cout << "minbounds:" << bvh[i].minboundsx << " ";
+        cout << bvh[i].minboundsy << " ";
+        cout << bvh[i].minboundsz << " | ";
+        
+        cout << "maxbounds:" << bvh[i].maxboundsx << " ";
+        cout << bvh[i].maxboundsy << " ";
+        cout << bvh[i].maxboundsz << " ";
+        
+        cout << "\n";
+    }
+//
 //    cout << "finished\n";
     bvh_initialized = true;
 //    cout << totalNodes << "\n";
 //    cout << "number of triangles: " << orderedvtriangles.size() << "\n";
+//    cout << sizeof(BVH_Node) << "\n";
+//    cout << sizeof(BVH_Node_II) << "\n";
+//    cout << sizeof(cl_float4) << "\n";
+//    cout << (sizeof(cl_short)*4)+(2*sizeof(cl_float4)) << "\n";
+//
+//    cout << (sizeof(BVH_Node) * totalNodes)/sizeof(cl_float4) << "\n";
 };
 
 // initialize new leaf in bvh tree
@@ -88,6 +108,7 @@ void createLeaf(TreeNode *node, BoundingBox bounds,
 
 	node->bbox = bounds;
 	node->index = orderedvtriangles.size();
+    
 	node->nPrimitives = end-start;
 
 	for (int i = start; i < end; i++) {
@@ -106,7 +127,6 @@ TreeNode* BoundingVolumeHierarchy::recBuildTree(int start, int end) {
 	// compute bounding box
 	BoundingBox bounds = vtriangles[start].bbox;
 	for (int i = start+1; i < end; i++) {
-//        vtriangles[i].bbox.print();
 		bounds = combine(bounds,vtriangles[i].bbox);
 	}
     
@@ -297,11 +317,17 @@ int BoundingVolumeHierarchy::flattenTree(TreeNode *node, int *offset) {
 
     int k = *offset;
 //    cout << "k: " << k << "\n";
+//    if((cl_short)node->index == 645) {
+//        node->bbox.minbounds.print();
+//        node->bbox.maxbounds.print();
+//    }
+    bvh[k].minboundsx = node->bbox.minbounds[0];
+    bvh[k].minboundsy = node->bbox.minbounds[1];
+    bvh[k].minboundsz = node->bbox.minbounds[2];
     
-    bvh[k].minbounds = (cl_float3){node->bbox.minbounds[0],
-        node->bbox.minbounds[1],node->bbox.minbounds[2]};
-    bvh[k].maxbounds = (cl_float3){node->bbox.maxbounds[0],
-        node->bbox.maxbounds[1],node->bbox.maxbounds[2]};
+    bvh[k].maxboundsx = node->bbox.maxbounds[0];
+    bvh[k].maxboundsy = node->bbox.maxbounds[1];
+    bvh[k].maxboundsz = node->bbox.maxbounds[2];
     
     uint32_t myOffset = (*offset)++;
     

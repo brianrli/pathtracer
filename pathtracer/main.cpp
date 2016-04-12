@@ -33,6 +33,8 @@
 #define PATH_TRACER_BITMAP 13
 
 // constants
+const bool DEBUG_MODE = false;
+
 Pathtracer *pathtracer = NULL;
 int window_height = 720;
 int window_width = 720;
@@ -50,16 +52,41 @@ void errorm(std::string error_message) {
 
 // ===[ M A I N ]===
 int main(int argc, char **argv) {
-
+    
+//    BoundingBox bbox;
+//    Vec3f v1 = Vec3f(0.0179529,1.19773,0.449576);
+//    Vec3f v2 = Vec3f(0.0572688, 0.0529851, -0.053914);
+//    Vec3f v3 = Vec3f(-0.0560218,1.32995,0.393053);
+//    bbox.minbounds = minimum(minimum(v1,v2),v3);
+//    bbox.maxbounds = maximum(maximum(v1,v2),v3);
+//    
+//    
+//    v1 = Vec3f(-0.0560218, 1.32995, 0.393053  );
+//    v2 = Vec3f(0.131244, -0.0792365, 0.00260931);
+//    v3 = Vec3f(-0.000152177, 1.35546, 0.32272);
+//    BoundingBox bbox1;
+//    bbox1.minbounds = minimum(minimum(v1,v2),v3);
+//    bbox1.maxbounds = maximum(maximum(v1,v2),v3);
+//    
+//    v1 = Vec3f(0.0752218, 1.25071, 0.395662);
+//    v2 = Vec3f(0.05618, -0.00289822, 0.0680239);
+//    v3 = Vec3f(-0.000152177, 1.35546, 0.32272);
+//    BoundingBox bbox2;
+//    bbox2.minbounds = minimum(minimum(v1,v2),v3);
+//    bbox2.maxbounds = maximum(maximum(v1,v2),v3);
+//
+//    bbox = combine(bbox, bbox1);
+//    bbox = combine(bbox, bbox2);
+//    
+//    bbox.print();
+    
     // [ create pathtracer ]
     pathtracer = new Pathtracer(window_width,
                                 window_height);
     
     // Triangles
     std::vector<Vec3f> vertices;
-    pathtracer->set_triangles(vertices);
-    
-    if(load_obj("objs/gourd.obj",vertices)) {
+    if(load_obj("objs/teapot.obj",vertices)) {
         if (!pathtracer->set_triangles(vertices))
             errorm("Couldn't set the triangles.");
     }
@@ -67,13 +94,13 @@ int main(int argc, char **argv) {
         errorm("Couldn't read the OBJ File.");
     }
     
-    // Scene (not triangles)
+//    // Scene (not triangles)
     pathtracer->set_scene();
-    
-    // Camera
+//
+//    // Camera
     pathtracer->set_camera();
-    
-    // Display
+//
+//    // Display
     initialize(argc, argv);
     
     return 0;
@@ -90,9 +117,9 @@ void display() {
     float* pixels = (float*)f_pixels;
     
     duration = (std::clock()-start)/(double) CLOCKS_PER_SEC;
-
-//    std::cout << "iteration: " << iterations << " took "
-//    << duration << " seconds." << std::endl;
+    
+    std::cout << "iteration: " << iterations << " took "
+    << duration << " seconds." << std::endl;
     
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
@@ -102,7 +129,7 @@ void display() {
     for(int i = 0; i < (width*height*3); i++) {
         imageData[i] = (unsigned char)(clip(pixels[i],0.0,1.0) * 255);
     }
-
+    
     glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
 
     //delete
@@ -127,7 +154,9 @@ void display() {
     glutSwapBuffers();
     
     //no redraw when debugging
-    glutPostRedisplay();
+    if (!DEBUG_MODE) {
+        glutPostRedisplay();
+    }
 }
 
 void keyboard( unsigned char key, int /*x*/, int /*y*/)

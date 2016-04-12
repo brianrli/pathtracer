@@ -104,23 +104,16 @@ public:
         centroid[1] = (bbox.minbounds[1] + bbox.maxbounds[1]) * 0.5;
         centroid[2] = (bbox.minbounds[2] + bbox.maxbounds[2]) * 0.5;
     }
+    
+    void print() {
+        v1.print();
+        v2.print();
+        v3.print();
+    }
 };
 
 // [ OpenCL Structure Prototypes ]
 struct BVH_Node {
-    cl_float3 minbounds;
-    cl_float3 maxbounds;
-
-    //leaf
-    cl_short offset;
-    // interior node
-    cl_short secondChildOffset;
-    
-    cl_short nPrimitives;
-    cl_short axis;
-};
-
-struct BVH_Node_II {
     cl_float minboundsx, minboundsy, minboundsz;
     cl_float maxboundsx, maxboundsy, maxboundsz;
     
@@ -130,6 +123,21 @@ struct BVH_Node_II {
     cl_short axis;
 };
 
+// ===[ Primitive ]===
+//typedef struct {
+
+//    Vector refractive;
+//    Vector specular;
+//    Vector diffuse;
+//    Vector emissive;
+//    Vector center;
+//    float4 type;
+//    float4 plane_normal;
+//    float radius;
+//    float p1,p2,p3;
+//    
+//} Primitive;
+
 struct Primitive {
     cl_float4 refractive;
     cl_float4 specular;
@@ -137,24 +145,18 @@ struct Primitive {
     cl_float4 emissive;
 
     cl_float4 center;
-    cl_float3 type;
-    cl_float radius;
+    cl_float4 type;
     cl_float4 plane_normal;
+    
+    cl_float radius;
+    //useless padding
+    cl_float p1,p2,p3;
 };
 
 struct Triangle {
-    cl_float3 v1;
-    cl_float3 v2;
-    cl_float3 v3;
-    cl_float3 material;
-};
-
-
-struct Triangle_II {
-    cl_float v1x, v1y, v1z;
-    cl_float v2x, v2y, v2z;
-    cl_float v3x, v3y, v3z;
-    cl_float2 material;
+    cl_float4 v1; //vertex 1
+    cl_float4 e1; //edge 1
+    cl_float4 e2; //edge 2
 };
 
 struct Material {

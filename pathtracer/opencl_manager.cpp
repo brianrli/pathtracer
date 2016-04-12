@@ -43,7 +43,7 @@ OpenCL_Manager::OpenCL_Manager() {
 }
 
 // initialize opencl
-int OpenCL_Manager::initialize() {
+int OpenCL_Manager::initialize(int width, int height) {
     
     // setup platform
     std::vector<cl::Platform> all_platforms;
@@ -68,6 +68,29 @@ int OpenCL_Manager::initialize() {
     
     // setup context
     m_context = cl::Context({m_device});
+    
+    // setup limits
+    m_global_size = width*height;
+    
+    size_t maxWorkGrpSize = 5;
+    std::vector<size_t> workItemSizes;
+    
+    clcheck(m_device.getInfo<size_t>(CL_DEVICE_MAX_WORK_GROUP_SIZE, &maxWorkGrpSize),
+            "Max Work Group Size Query");
+    m_device.getInfo<std::vector<size_t> >(CL_DEVICE_MAX_WORK_ITEM_SIZES, &workItemSizes);
+    
+    m_work_item_size = workItemSizes[0];
+
+    int size = m_global_size;
+    
+    // global work size must be evenly divisible by work item size
+    if (size % workItemSizes[0] != 0) {
+        m_global_size = (size/workItemSizes[0]) * workItemSizes[0]
+        + workItemSizes[0];
+    }
+    else {
+        m_global_size = size;
+    }
     
     return 0;
 }
@@ -109,6 +132,60 @@ int OpenCL_Manager::kernel_load(std::string file_name,
     // setup kernel
     m_kernel = cl::Kernel(m_program,kernel_name.c_str());
     
+    // [ deprecated debugging code ]
+    
+    //
+    //    for(int i = 0; i < n_nodes; i++) {
+    //        printf("%f %f %f\n", nodes[i].minbounds.x,nodes[i].minbounds.y,nodes[i].minbounds.z);
+    //        printf("%f %f %f\n", nodes[i].maxbounds.x,nodes[i].maxbounds.y,nodes[i].maxbounds.z);
+    //    }
+    //
+    
+//        cl::size_t<3> wgs;
+
+    
+    //std::vector<size_t> s = std::vector<size_t>(3);
+    
+
+    
+    return 0;
+}
+
+void print_f4(cl_float4 f4){
+    std::cout << f4.x << " ";
+    std::cout << f4.y << " ";
+    std::cout << f4.z << " ";
+}
+
+void print_tri(Triangle tri) {
+    print_f4(tri.v1);
+    std::cout << " | ";
+    print_f4(tri.e1);
+    std::cout << " | ";
+    print_f4(tri.e2);
+    std::cout << "\n";
+}
+
+
+// load triangles to host memory
+int OpenCL_Manager::triangles_to_texture(Triangle *triangles,int n_triangles) {
+
+    size_t width = n_triangles;
+    std::cout << "Triangles to Texture "<< n_triangles <<"\n";
+//    std::cout << "Triangles to Texture "<< width*(sizeof(Triangle)/sizeof(cl_float4)) <<"\n";
+    
+//    for(int i = 0; i < n_triangles; i++) {
+//        print_tri(triangles[i]);
+//    }
+    
+    cl::ImageFormat format;
+    format.image_channel_order = CL_RGBA;
+    format.image_channel_data_type = CL_FLOAT;
+    
+    // create 1D texture
+    m_texture = cl::Image1D(m_context,CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+                            format,width*3,triangles);
+    
     return 0;
 }
 
@@ -119,39 +196,22 @@ int OpenCL_Manager::kernel_execute(Primitive *primitives, Camera *camera, int n_
                                    int iterations, Triangle *triangles, int n_triangles,
                                    Material *materials, int n_materials,
                                    BVH_Node *nodes, int n_nodes) {
-
-    
-//
-//    for(int i = 0; i < n_nodes; i++) {
-//        printf("%f %f %f\n", nodes[i].minbounds.x,nodes[i].minbounds.y,nodes[i].minbounds.z);
-//        printf("%f %f %f\n", nodes[i].maxbounds.x,nodes[i].maxbounds.y,nodes[i].maxbounds.z);
-//    }
-//    
-    // [ Limits ]
-    size_t maxWorkGrpSize = 5;
-    std::vector<size_t> workItemSizes;
-    
-    clcheck(m_device.getInfo<size_t>(CL_DEVICE_MAX_WORK_GROUP_SIZE, &maxWorkGrpSize),
-         "Max Work Group Size Query");
-    
-    m_device.getInfo<std::vector<size_t> >(CL_DEVICE_MAX_WORK_ITEM_SIZES, &workItemSizes);
-    
-    // setup data & buffers & local args
     
     // [ Global ]
     cl::Buffer prim_buff(m_context,CL_MEM_READ_WRITE,sizeof(Primitive)*n_primitives);
     cl::Buffer camera_buff(m_context,CL_MEM_READ_ONLY,sizeof(Camera));
     cl::Buffer image_buff(m_context,CL_MEM_WRITE_ONLY,sizeof(Pixel)*width*height);
     cl::Buffer seed_memory_buff(m_context,CL_MEM_READ_WRITE,sizeof(int)*width*height);
-    cl::Buffer tri_buff(m_context,CL_MEM_READ_ONLY,sizeof(Triangle)*n_triangles);
+    
+//    cl::Buffer tri_buff(m_context,CL_MEM_READ_ONLY,sizeof(Triangle)*n_triangles);
     cl::Buffer mat_buff(m_context,CL_MEM_READ_ONLY,sizeof(Material)*n_materials);
     cl::Buffer bvh_buff(m_context,CL_MEM_READ_ONLY,sizeof(BVH_Node)*n_nodes);
     
     // [ Local ]
     cl::LocalSpaceArg local_prim_buff = cl::Local(sizeof(Primitive)*n_primitives);
     cl::LocalSpaceArg local_mat_buff = cl::Local(sizeof(Material)*n_materials);
-    cl::LocalSpaceArg local_tri_buff = cl::Local(sizeof(Triangle)*n_triangles);
-    cl::LocalSpaceArg local_bvh_buff = cl::Local(sizeof(BVH_Node)*n_nodes/2);
+//    cl::LocalSpaceArg local_tri_buff = cl::Local(sizeof(Triangle)*n_triangles);
+    cl::LocalSpaceArg local_bvh_buff = cl::Local(sizeof(BVH_Node)*n_nodes);
     
     // [ Command Queue ]
     m_queue = cl::CommandQueue(m_context,m_device);
@@ -165,39 +225,39 @@ int OpenCL_Manager::kernel_execute(Primitive *primitives, Camera *camera, int n_
           "image_buff write");
     clcheck(m_queue.enqueueWriteBuffer(seed_memory_buff, CL_TRUE, 0, sizeof(int)*width*height, seed_memory),
             "seed_memory_buff write");
-    clcheck(m_queue.enqueueWriteBuffer(tri_buff, CL_TRUE, 0, sizeof(Triangle)*n_triangles, triangles),
-            "tri_buff write");
     clcheck(m_queue.enqueueWriteBuffer(mat_buff, CL_TRUE, 0, sizeof(Material)*n_materials, materials),
             "mat_memory_buff write");
     clcheck(m_queue.enqueueWriteBuffer(bvh_buff, CL_TRUE, 0, sizeof(BVH_Node)*n_nodes, nodes),
             "bvh_node_buff write");
+
+    //__read_only image1d_t texture_triangles,
     
-//    const __global float4* global_primitives,
-//    const __global float4* global_triangles,
-//    const __global float4* global_materials,
-//    const __global float4* global_bvh;
+    //const __global float4* global_primitives,
+    //const __global float4* global_materials,
+    //const __global float4* global_bvh,
     
-//    __global Pixel* image,
-//    __global int* seed_memory,
-//    __global Camera* camera,
+    //__global Pixel* image,
+    //__global int* seed_memory,
+    //__global Camera* camera,
     
-//    __local float4* local_primitives,
-//    __local float4* local_materials,
-//    __local float4* local_triangles,
-//    __local float4* local_bvh,
+    //__local float4* local_primitives,
+    //__local float4* local_materials,
+    //__local float4* local_bvh,
     
-//    int width,
-//    int height,
-//    int iteration,
-//    int n_triangles,
-//    int n_materials,
-//    int n_primitives,
-//    int n_nodes) {
+    //int width,
+    //int height,
+    //int iteration,
+    //int n_triangles,
+    //int n_materials,
+    //int n_primitives,
+    //int n_nodes) {
+
     
     // Global
     int k = 0; // mini-hack
+    clcheck(m_kernel.setArg(k++,m_texture),"Triangles on Texture Buffer");
+    
     clcheck(m_kernel.setArg(k++,prim_buff),"Global Primitives");
-    clcheck(m_kernel.setArg(k++,tri_buff),"Global Triangles");
     clcheck(m_kernel.setArg(k++,mat_buff),"Global Materials");
     clcheck(m_kernel.setArg(k++,bvh_buff),"Global Bounding Volume Hierarchy"); //bvh
 
@@ -208,7 +268,6 @@ int OpenCL_Manager::kernel_execute(Primitive *primitives, Camera *camera, int n_
     // Locals
     clcheck(m_kernel.setArg(k++,local_prim_buff),"Local Primitives");
     clcheck(m_kernel.setArg(k++,local_mat_buff),"Local Materials");
-    clcheck(m_kernel.setArg(k++,local_tri_buff),"Local Triangles");
     clcheck(m_kernel.setArg(k++,local_bvh_buff),"Local Bounding Volume Hierarchy"); //bvh
     
     // Scalars
@@ -220,22 +279,15 @@ int OpenCL_Manager::kernel_execute(Primitive *primitives, Camera *camera, int n_
     clcheck(m_kernel.setArg(k++,n_primitives),"set n_primitives");
     clcheck(m_kernel.setArg(k++,n_nodes),"set n_nodes"); //bvh
     
-    int global_size, size = width*height;
-    
-    // global work size must be evenly divisible by work item size
-    if (size % workItemSizes[0] != 0) {
-        global_size = (size/workItemSizes[0]) * workItemSizes[0]
-        + workItemSizes[0];
-    }
-    else {
-        global_size = size;
-    }
     
     // offset, global work size, local work size
     clcheck(m_queue.enqueueNDRangeKernel(m_kernel,
                                       cl::NullRange,
-                                      cl::NDRange(global_size),
-                                      cl::NDRange(workItemSizes[0])),
+//                                     cl::NDRange(1),
+//                                      cl::NullRange),
+                                      cl::NDRange(m_global_size),
+                                      cl::NDRange(m_work_item_size)),
+//                                      cl::NDRange(m_work_item_size)),
             
             "enqueueNDRangeKernel");
 
@@ -244,31 +296,22 @@ int OpenCL_Manager::kernel_execute(Primitive *primitives, Camera *camera, int n_
     m_queue.enqueueReadBuffer(image_buff,CL_TRUE,0,sizeof(Pixel)*width*height,image);
     m_queue.enqueueReadBuffer(seed_memory_buff,CL_TRUE,0,sizeof(int)*width*height,seed_memory);
     
-    
-    //    cl::size_t<3> wgs;
 //    std::vector<size_t> wgs = std::vector<size_t>(3);
 //    m_kernel.getWorkGroupInfo<std::vector<size_t> >(m_device,CL_KERNEL_WORK_GROUP_SIZE,&wgs);
-//
+//    
 //    cl_ulong lms;
 //    m_kernel.getWorkGroupInfo<cl_ulong>(m_device, CL_KERNEL_LOCAL_MEM_SIZE, &lms);
 //    
 //    cl_ulong dlms;
 //    m_device.getInfo<cl_ulong>(CL_DEVICE_LOCAL_MEM_SIZE, &dlms);
-    
-//    CL_KERNEL_LOCAL_MEM_SIZE
-//    CL_DEVICE_LOCAL_MEM_SIZE
-    
-//    std::cout << "device local mem size " << dlms << "\n";
 //    
-//    std::cout << "local memory size " << sizeof(BVH_Node_II) * n_nodes
-//    + sizeof(Triangle_II) * n_triangles << "\n";
-//    + sizeof(Material) * n_materials
-//    + sizeof(Primitive) * n_primitives << "\n";
-    
-    //std::vector<size_t> s = std::vector<size_t>(3);
-
-    
-    
+//    //        CL_KERNEL_LOCAL_MEM_SIZE
+//    //        CL_DEVICE_LOCAL_MEM_SIZE
+//    
+//    std::cout << "device local mem size " << dlms << "\n";
+//
+//    std::cout << "local memory size " << sizeof(BVH_Node) * n_nodes
+//    + sizeof(Material) * n_materials + sizeof(Primitive) * n_primitives << "\n";
     
     return 0;
 }

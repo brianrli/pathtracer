@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "pathtracer/opencl_manager.cpp"
-            timestampString = "471057468.85168"
+            timestampString = "480468661.451755"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "91"
-            endingLineNumber = "91"
+            startingLineNumber = "114"
+            endingLineNumber = "114"
             landmarkName = "OpenCL_Manager::kernel_load(std::string file_name, std::string kernel_name)"
             landmarkType = "5">
          </BreakpointContent>
@@ -26,11 +26,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "pathtracer/pathtracer_kernel.cl"
-            timestampString = "478052657.292154"
+            timestampString = "481833676.106641"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "712"
-            endingLineNumber = "712"
+            startingLineNumber = "821"
+            endingLineNumber = "821"
             landmarkName = "pathtrace()"
             landmarkType = "7">
          </BreakpointContent>
@@ -92,11 +92,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "pathtracer/bvh.cpp"
-            timestampString = "478485068.473757"
+            timestampString = "481667976.781261"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "139"
-            endingLineNumber = "139"
+            startingLineNumber = "159"
+            endingLineNumber = "159"
             landmarkName = "BoundingVolumeHierarchy::recBuildTree(int start, int end)"
             landmarkType = "5">
          </BreakpointContent>
@@ -160,6 +160,22 @@
                   offsetFromSymbolStart = "1173">
                </Location>
             </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "pathtracer/opencl_manager.cpp"
+            timestampString = "480800111.193603"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "183"
+            endingLineNumber = "183"
+            landmarkName = "OpenCL_Manager::triangles_to_texture(Triangle *triangles,int n_triangles)"
+            landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
