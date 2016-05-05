@@ -29,7 +29,7 @@ bool load_obj(char* path, std::vector<Vec3f> &out_vertices) {
         if ( strcmp( lineHeader, "v" ) == 0 ){
             Vec3f vertex;
             fscanf(file, "%f %f %f\n", &vertex[0], &vertex[1], &vertex[2] );
-            // printf("%f %f %f\n",vertex[0], vertex[1], vertex[2]);
+             printf("%f %f %f\n",vertex[0], vertex[1], vertex[2]);
             temp_vertices.push_back(vertex);
         }
         else if ( strcmp( lineHeader, "vn" ) == 0 ){

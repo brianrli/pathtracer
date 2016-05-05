@@ -130,9 +130,9 @@ BVH_Node get_node(__read_only image1d_t texture_bvh_bbox,
 BVH_Node get_node(__read_only image1d_t texture_bvh_bbox,
                   __read_only image1d_t texture_bvh_info,
                   int index) {
-
+    
     int i = index * 2;
-
+    
     BVH_Node node;
     float4 minbounds = read_imagef(texture_bvh_bbox,i);
     node.minboundsx = minbounds.x;
@@ -143,7 +143,7 @@ BVH_Node get_node(__read_only image1d_t texture_bvh_bbox,
     node.maxboundsx = maxbounds.x;
     node.maxboundsy = maxbounds.y;
     node.maxboundsz = maxbounds.z;
-
+    
     int4 info = read_imagei(texture_bvh_info,index);
     node.offset = info.x;
     node.secondChildOffset = info.y;
@@ -168,7 +168,7 @@ Triangle get_triangle(__read_only image1d_t texture_triangles, int index) {
     tri.e1 = read_imagef(texture_triangles,sampler,index+1);
     tri.e2 = read_imagef(texture_triangles,sampler,index+2);
     return tri;
-
+    
 }
 
 void print_triangle(Triangle tri);
@@ -176,7 +176,7 @@ void print_triangle(Triangle tri) {
     print_float4(tri.v1);
     print_float4(tri.e1);
     print_float4(tri.e2);
-//    printf("\n");
+    //    printf("\n");
 }
 
 void print_triangle2(Triangle tri, Triangle tri2);
@@ -203,7 +203,7 @@ typedef struct {
     // [ specular ]
     // w : shininess
     Vector specular;
-
+    
     // [ diffuse ]
     Vector diffuse;
     
@@ -214,37 +214,18 @@ typedef struct {
     
     // [ geometry ]
     Vector center;
-
+    
     float4 type;
     // [ Sphere  0 ]
     
     // [ Plane  1 ]
     float4 plane_normal;
-
+    
     float radius;
     float p1,p2,p3;
     
 } Primitive;
 
-print_primitive(Primitive p) {
-    printf("\n");
-    printf("reractive: ");
-    print_vec(p.refractive);
-    printf("specular: ");
-    print_vec(p.specular);
-    printf("diffusive: ");
-    print_vec(p.diffuse);
-    printf("emissive: ");
-    print_vec(p.emissive);
-    printf("center: ");
-    print_vec(p.center);
-    printf("type: ");
-    print_vec(p.type);
-    printf("radius: %f\n",p.radius);
-    printf("normal: ");
-    print_vec(p.plane_normal);
-    printf("\n");
-}
 
 Material material_from_primitive(Primitive p);
 Material material_from_primitive(Primitive p) {
@@ -259,7 +240,7 @@ Material material_from_primitive(Primitive p) {
 bool islight(Material m);
 bool isrefractive(Material m);
 bool isspecular(Material m);
-    
+
 bool islight(Material m){
     return (m.emissive.s1 > 0 ||
             m.emissive.s2 > 0 ||
@@ -286,7 +267,7 @@ float rand(int* seed) // 1 <= *seed < m
 
 Vector randomSampleHemisphere(Vector normal, int *seed);
 Vector randomSampleHemisphere(Vector normal, int *seed) {
-
+    
     // uniformly sample unit sphere
     float z = rand(seed);
     float r2 = rand(seed);
@@ -315,12 +296,12 @@ Vector randomSampleHemisphere(Vector normal, int *seed) {
     Vector u = normalize(cross(most_perpendicular,normal));
     Vector v = cross(normal, u);
     
-//    print_vec2(normal, u*x + v*y + normal*z);
-
-    return (u*x + v*y + normal*z);
- }
-
+    //    print_vec2(normal, u*x + v*y + normal*z);
     
+    return (u*x + v*y + normal*z);
+}
+
+
 // ===[ Intersect Information ]===
 typedef struct {
     Vector normal;
@@ -336,13 +317,13 @@ bool intersect_tri(Ray *r, Triangle tri, float *t, Isect *isect);
 
 // WITH ACCELERATION
 bool intersectBox(Ray *r, float3 minbounds, float3 maxbounds, Vector invDir,
-    bool dirIsNeg[3], float t);
+                  bool dirIsNeg[3], float t);
 bool intersectBox(Ray *r, float3 minbounds, float3 maxbounds, Vector invDir,
-    bool dirIsNeg[3], float t) {
-
+                  bool dirIsNeg[3], float t) {
+    
     // Check for ray intersection against x and y slabs
     float tmin, tmax, tymin, tymax, tzmin, tzmax;
-
+    
     // x slab
     if (dirIsNeg[0]) {
         tmin = (maxbounds.x - (*r).origin.x) * invDir.x;
@@ -352,7 +333,7 @@ bool intersectBox(Ray *r, float3 minbounds, float3 maxbounds, Vector invDir,
         tmin = (minbounds.x - (*r).origin.x) * invDir.x;
         tmax = (maxbounds.x - (*r).origin.x) * invDir.x;
     }
-
+    
     // y slab
     if (dirIsNeg[1]) {
         tymin = (maxbounds.y - (*r).origin.y) * invDir.y;
@@ -363,14 +344,14 @@ bool intersectBox(Ray *r, float3 minbounds, float3 maxbounds, Vector invDir,
         tymax = (maxbounds.y - (*r).origin.y) * invDir.y;
     }
     
-
-
+    
+    
     if ((tmin > tymax) || (tymin > tmax))
         return false;
-
+    
     if (tymin > tmin) tmin = tymin;
     if (tymax < tmax) tmax = tymax;
-
+    
     // Check for ray intersection against z slab
     if (dirIsNeg[2]) {
         tzmin = (maxbounds.z - (*r).origin.z) * invDir.z;
@@ -381,7 +362,6 @@ bool intersectBox(Ray *r, float3 minbounds, float3 maxbounds, Vector invDir,
         tzmax = (maxbounds.z - (*r).origin.z) * invDir.z;
     }
     
-   
     
     if ((tmin > tzmax) || (tzmin > tmax))
         return false;
@@ -403,57 +383,54 @@ bool intersect_tri_bvh(Ray *r, __read_only image1d_t triangles, int n_triangles,
                        __read_only image1d_t bvh_texture_bbox,
                        __read_only image1d_t bvh_texture_info, int n_nodes) {
     
-
+    
     int current = 0; // position in stack
     int nodeNum = 0;
     int todo[64];
-
+    
     bool hit = false;
-
+    
     // for special bounding box intersection algorithm
     Vector invDir = (float4){
         1.f/(*r).direction.x,
         1.f/(*r).direction.y,
         1.f/(*r).direction.z,
         0.0f};
-
-    bool dirIsNeg[3] = {invDir.x < 0, invDir.y < 0, invDir.z < 0};
     
-    //x: -0.236352 y: -0.046431 z: 0.970557 w: 0.000000
-//    print_ray(*r);
+    bool dirIsNeg[3] = {invDir.x < 0, invDir.y < 0, invDir.z < 0};
     
     // intersect loop
     while (true) {
         
-//        printf("inside %d\n",nodeNum);
+        //        printf("inside %d\n",nodeNum);
         // if inside bounding box
         BVH_Node n = get_node(bvh_texture_bbox,
                               bvh_texture_info,
                               nodeNum);
         
-
+        
         float3 minbounds = {n.minboundsx,
             n.minboundsy,
             n.minboundsz};
         float3 maxbounds = {n.maxboundsx,
             n.maxboundsy,
             n.maxboundsz};
-//        
+        //
         if (intersectBox(r, minbounds, maxbounds, invDir,dirIsNeg,*t)) {
             
             // if leaf node
             if(n.nPrimitives > 0) {
-
-                for (int i = 0; i < n.nPrimitives; i++) {
                 
+                for (int i = 0; i < n.nPrimitives; i++) {
+                    
                     Triangle tri = get_triangle(triangles, n.offset+i);
                     if(intersect_tri(r,tri,t,isect)) {
                         hit = true;
                     }
                 }
-
+                
                 if (current == 0) {
-//                    printf("C1\n");
+                    //                    printf("C1\n");
                     break;
                 }
                 
@@ -463,17 +440,11 @@ bool intersect_tri_bvh(Ray *r, __read_only image1d_t triangles, int n_triangles,
             else {
                 // process children by how close they are
                 if(dirIsNeg[(int)n.axis]) {
-//                if(dirIsNeg[bvh[nodeNum].axis]) {
-//                    printf("second todo: %d %d\n",nodeNum+1,bvh[nodeNum].secondChildOffset);
-                    
                     todo[current++] = nodeNum+1;
-//                    nodeNum = bvh[nodeNum].secondChildOffset;
                     nodeNum = n.secondChildOffset;
                 }
-                // 
+                //
                 else {
-//                    printf("first todo: %d %d\n",nodeNum+1,bvh[nodeNum].secondChildOffset);
-//                    todo[current++] = bvh[nodeNum].secondChildOffset;
                     todo[current++] = n.secondChildOffset;
                     nodeNum++;
                 }
@@ -487,9 +458,8 @@ bool intersect_tri_bvh(Ray *r, __read_only image1d_t triangles, int n_triangles,
             nodeNum = todo[--current];
         }
     }
-//    if(hit) {
-//        printf("hit successfull\n");
-//    }
+    
+    
     return hit;
 }
 
@@ -504,7 +474,7 @@ bool intersect_tri(Ray *r, Triangle tri, float *t, Isect *isect) {
     
     // ray and triangle are parallel
     if(fabs(det) < EPSILON) {
-//        printf("1\n");
+        //        printf("1\n");
         return false;
     }
     
@@ -512,16 +482,16 @@ bool intersect_tri(Ray *r, Triangle tri, float *t, Isect *isect) {
     
     float4 tvec = (*r).origin - tri.v1;
     float u = dot(tvec,pvec) * invDet;
-
+    
     if (u < 0 || u > 1) {
         return false;
     }
     
     float4 qvec = cross(tvec,edge1);
     float v = dot((*r).direction.xyz,qvec.xyz) * invDet;
-
+    
     if (v < 0 || u+v > 1) {
-//        printf("3\n");
+        //        printf("3\n");
         return false;
     }
     
@@ -534,22 +504,18 @@ bool intersect_tri(Ray *r, Triangle tri, float *t, Isect *isect) {
         (*isect).point = point_at(*r,*t);
         
         float4 n = normalize(cross(edge1,edge2));
-
+        
         // if facing in same direction, flip
         if(dot(n,(*r).direction) > 0.0f) {
             n = -n;
         }
         
         (*isect).normal = n;
-//        print_vec((*isect).normal);
-        
         (*isect).triangle = tri;
-//        printf("material %f\n",(isect->triangle->material).x);
         (*isect).is_triangle = true;
         return true;
     }
-
-//    printf("missing but why?\n");
+    
     return false;
 }
 
@@ -558,10 +524,10 @@ bool intersect(Ray *r,local Primitive *p, float *t, Isect *isect);
 bool intersect(Ray *r,local Primitive *p, float *t, Isect *isect) {
     
     float discriminant;
-
+    
     // [ intersect sphere ]
     if ((*p).type.x == 0) {
-
+        
         // d . d
         float a = dot((*r).direction,(*r).direction);
         
@@ -571,7 +537,7 @@ bool intersect(Ray *r,local Primitive *p, float *t, Isect *isect) {
         // (e - c) . (e - c) - (R^2)
         float c = dot((*r).origin-(*p).center,(*r).origin-(*p).center)-
         ((*p).radius * (*p).radius);
-
+        
         discriminant = (b*b)-(4*a*c);
         float tt = 1000.0f;
         
@@ -602,7 +568,7 @@ bool intersect(Ray *r,local Primitive *p, float *t, Isect *isect) {
         
         // intersect found
         if (tt < *t && tt > 0.0f) {
-             *t = tt;
+            *t = tt;
             (*isect).point = point_at(*r,*t);
             (*isect).normal = normalize((*isect).point - (*p).center);
             (*isect).primitive = p;
@@ -619,7 +585,7 @@ bool intersect(Ray *r,local Primitive *p, float *t, Isect *isect) {
             
             Vector between = p->center - (*r).origin;
             tt = dot(between, p->plane_normal) / denom;
-
+            
             // intersect found
             if (tt < *t && tt >= 0) {
                 *t = tt;
@@ -658,12 +624,12 @@ Ray handle_reflective(Isect isect, Ray r) {
 // [ Refractive ]
 Vector refract(Vector D, Vector N, float index);
 Vector refract(Vector D, Vector N, float index){
-
+    
     Vector t = (float4) {0.0f,0.0f,0.0f,0.0f};
     
     //index = n/n_t
     float a = 1-(pow(index,2)*(1-pow(dot(D,N),2)));
-
+    
     if(a < 0.0f){
         return t;
     }
@@ -678,12 +644,12 @@ Vector refract(Vector D, Vector N, float index){
 //get refractive index
 float reindex(Material m);
 float reindex(Material m) {
-	return m.refractive.x;
+    return m.refractive.x;
 }
 
 float schlick_fresnel(Isect isect, Ray r, Material m);
 float schlick_fresnel(Isect isect, Ray r, Material m) {
-
+    
     float n2 = reindex(m);
     float F0 = pow((1-n2)/(1+n2),2);
     float result;
@@ -697,7 +663,7 @@ float schlick_fresnel(Isect isect, Ray r, Material m) {
         result = F0 + (1-F0) * pow(1-dot(isect.normal,r.direction),5);
     }
     
-
+    
     return result;
 }
 
@@ -705,15 +671,15 @@ Ray handle_refractive(Isect isect, Ray r, Material m);
 Ray handle_refractive(Isect isect, Ray r, Material m) {
     
     Ray new_ray = create_ray(r.depth+1,REFRACTIVE);
-
+    
     Vector N = isect.normal;
     Vector d = r.direction;
-
+    
     float n = reindex(m);
-
+    
     //new vector declarations
     Vector t = (float4) {0.0f,0.0f,0.0f,0.0f};
-
+    
     // entering material
     if(dot(d,N) < 0.0f){
         t = refract(d,N,1/n);
@@ -722,7 +688,7 @@ Ray handle_refractive(Isect isect, Ray r, Material m) {
     else{
         t = refract(d,-N,n);
     }
-
+    
     // refracted
     if(t.w == 1.0f) {
         t.w = 0;
@@ -734,191 +700,172 @@ Ray handle_refractive(Isect isect, Ray r, Material m) {
         float ndoti = dot(N,-d);
         new_ray.direction = (ndoti + ndoti)*N + d;
     }
-
+    
     new_ray.origin = isect.point + (EPSILON * new_ray.direction);
     return new_ray;
 }
 
 // render loop
 //Vector pathtrace(Ray ray,global Primitive *primitives, int n_primitives) {
-Vector pathtrace(Ray ray,local Primitive *primitives, int n_primitives,
-                 __read_only image1d_t texture_triangles, int n_triangles, local Material *materials,
-                 int n_materials,  __read_only image1d_t texture_bvh_bbox,
-                 __read_only image1d_t texture_bvh_info,int n_nodes, int *seed);
-Vector pathtrace(Ray ray,local Primitive *primitives, int n_primitives,
-                 __read_only image1d_t texture_triangles, int n_triangles, local Material *materials,
-                 int n_materials,  __read_only image1d_t texture_bvh_bbox,
-                  __read_only image1d_t texture_bvh_info,int n_nodes, int *seed) {
-        
+float4 pathtrace(Ray *ray,local Primitive *primitives, int n_primitives,
+                 __read_only image1d_t texture_triangles, int n_triangles, local Material *materials, int n_materials,  __read_only image1d_t texture_bvh_bbox,
+                 __read_only image1d_t texture_bvh_info,int n_nodes, int *seed,
+                 float4 c, float4 *w);
+float4 pathtrace(Ray *ray,local Primitive *primitives, int n_primitives,
+                 __read_only image1d_t texture_triangles, int n_triangles, local Material *materials, int n_materials,  __read_only image1d_t texture_bvh_bbox,
+                 __read_only image1d_t texture_bvh_info,int n_nodes, int *seed,
+                 float4 c, float4 *w) {
+    
     // intersection
-    Vector color = {0.0f,0.0f,0.0f,0.0f};
-    Vector weight = {1.0f,1.0f,1.0f,0.0f};
+    float4 color = c;
+    float4 weight = *w;
 
-    Ray r = ray;
-    int b;
-    for(b = 0; b < MAXDEPTH; b++) {
-        
-        float t = 1000;
-        Isect isect;
-        isect.is_triangle = false;
-        bool found_intersect = false;
-        Ray new_ray;
-        
-        // trace ray to find point of intersection
-        // with the nearest surface
-        for(int i = 0; i < n_primitives; i++) {
-//                            printf("whato\n");
-            // if there is an intersection
-            if(intersect(&r,&(primitives[i]),&t,&isect)) {
-                found_intersect = true;
-            }
-        }
-        // Revise with Bounding Volume Hierarchy
-        
-
-        if(intersect_tri_bvh(&r,texture_triangles,n_triangles,&t,&isect,texture_bvh_bbox,
-                             texture_bvh_info,n_nodes)) {
+    Ray r = *ray;
+    
+    float t = 1000;
+    Isect isect;
+    isect.is_triangle = false;
+    bool found_intersect = false;
+    Ray new_ray;
+    
+    // trace ray to find point of intersection
+    // with the nearest surface
+    for(int i = 0; i < n_primitives; i++) {
+        // if there is an intersection
+        if(intersect(&r,&(primitives[i]),&t,&isect)) {
             found_intersect = true;
         }
-        
-        // [ Process Intersection ]
-        if (found_intersect) {
-            
-            Material m;
-
-            if(isect.is_triangle) {
-                m = materials[0];
-            }
-            else {
-                m = material_from_primitive((*isect.primitive));
-            }
-
-            // =====[ Emission (light) ]=====
-            if(islight(m)) {
-                color += weight * m.emissive;
-                break;
-            }
-            else {
-                // =====[ Shading ]=====
-
-                bool fresnel = rand(seed) < schlick_fresnel(isect,r,m);
-                // [ Reflection]
-            	if(fresnel && isspecular(m)) {
-                    new_ray = handle_reflective(isect,r);
-                }
-                // [ Transmission / TIR ]
-                else if(isrefractive(m)) {
-                    if(fresnel) {
-                        new_ray = handle_reflective(isect,r);
-                    }
-                    else {
-                        new_ray = handle_refractive(isect,r,m);
-                    }
-                }
-                // [ Diffuse ]
-                else {
-                    weight *= m.diffuse;
-                    new_ray = handle_diffuse(isect,r,seed);
-                    weight *= dot(isect.normal,new_ray.direction)*2.0;
-                    
-//                    if(isect.is_triangle) {
-//                        printf("%f\n",dot(isect.normal,r.direction));
-//                    }
-                }
-            }
-        }
-        else {
-            color+= weight * BACKGROUND_COLOR;
-            break;
-        }
-        
-        // [ Russian Roulette ]
-        if (b > 3) {            
-            float m = (weight.x > weight.y) ? weight.x : weight.y;
-            m = (weight.z > m) ? weight.z : m;
-            float pterm = rand(seed);
-            
-            if(m < pterm) {
-                break;
-            }
-            weight /= m;
-        }
-        
-    
-        r = new_ray;
     }
     
+    // bounding volume hierarchy
+    if(intersect_tri_bvh(&r,texture_triangles,n_triangles,&t,&isect,texture_bvh_bbox,
+                         texture_bvh_info,n_nodes)) {
+        found_intersect = true;
+    }
+    
+    // [ Process Intersection ]
+    if (found_intersect) {
+        
+        Material m;
+        
+        if(isect.is_triangle) {
+            m = materials[0];
+        }
+        else {
+            m = material_from_primitive((*isect.primitive));
+        }
+        
+        // =====[ Emission (light) ]=====
+        if(islight(m)) {
+            color += weight * m.emissive;
+            color.w = 1.0f;
+        }
+        else {
+            // =====[ Shading ]=====
+            
+            bool fresnel = rand(seed) < schlick_fresnel(isect,r,m);
+            // [ Reflection]
+            if(fresnel && isspecular(m)) {
+                new_ray = handle_reflective(isect,r);
+            }
+            // [ Transmission / TIR ]
+            else if(isrefractive(m)) {
+                if(fresnel) {
+                    new_ray = handle_reflective(isect,r);
+                }
+                else {
+                    new_ray = handle_refractive(isect,r,m);
+                }
+            }
+            // [ Diffuse ]
+            else {
+                weight *= m.diffuse;
+                new_ray = handle_diffuse(isect,r,seed);
+                float dum = dot(isect.normal,new_ray.direction);
+                weight *= (float4){dum,dum,dum,0.0f};
+                
+            }
+        }
+    }
+    else {
+        color += weight * BACKGROUND_COLOR;
+        color.w = 1.0f;
+    }
+
+    (*ray) = new_ray;
+    (*w) = weight;
     return color;
 }
 
 // main pathtracing kernel
-__kernel void pathtracer_kernel(__read_only image1d_t texture_triangles,
-                                __read_only image1d_t texture_bvh_bbox,
-                                __read_only image1d_t texture_bvh_info,
-                                const __global float4* global_primitives,
-                                const __global float4* global_materials,
-//                                const __global float4* global_bvh,
-                                __global Pixel* image,
-                                __global int* seed_memory,
-                                __global Camera* camera,
-                                __local float4* local_primitives,
-                                __local float4* local_materials,
-//                                __local float4* local_bvh,
-                                int width,
-                                int height,
-                                int iteration,
-                                int n_triangles,
-                                int n_materials,
-                                int n_primitives,
-                                int n_nodes) {
+// need to return point
+__kernel void initial_ray_kernel(__read_only image1d_t texture_triangles,
+                          __read_only image1d_t texture_bvh_bbox,
+                          __read_only image1d_t texture_bvh_info,
+                          
+                          const __global float4* global_primitives,
+                          const __global float4* global_materials,
+                          
+                          __global int* seed_memory,
+                          __global Camera* camera,
+                          
+                          // iterative approach
+                          __global float4 *color,
+                          __global float4 *origin,
+                          __global float4 *direction,
+                          __global float4 *weight,
+                          
+                          __local float4* local_primitives,
+                          __local float4* local_materials,
+                          
+                          int width,
+                          int height,
+                          int iteration,
+                          int n_triangles,
+                          int n_materials,
+                          int n_primitives,
+                          int n_nodes) {
     
-
     // perform copy from global to local memory
     event_t events[2];
     events[0] = async_work_group_copy(local_primitives,
-                                     global_primitives,
-                                     (size_t) ((sizeof(Primitive) * n_primitives)/sizeof(float4)), 0);
+                                      global_primitives,
+                                      (size_t) ((sizeof(Primitive) * n_primitives)/sizeof(float4)), 0);
     events[1] = async_work_group_copy(local_materials,
                                       global_materials,
                                       (size_t) ((sizeof(Material) * n_materials)/sizeof(float4)), 0);
-//    events[2] = async_work_group_copy(local_bvh,
-//                                      global_bvh,
-//                                      (size_t) ((sizeof(BVH_Node) * n_nodes)/sizeof(float4)), 0);
     
-
     wait_group_events(2, events);
-
-
+    
     local Primitive *primitives = (local Primitive*) local_primitives;
     local Material *materials = (local Material*) local_materials;
-
-    Pixel pixel;
-    Vector color;
-    Ray ray = create_ray(PRIMARY,0);
     
+    // global id
     int gid = get_global_id(0);
     
     // padding kernel to align item to group
     if (gid >= width * height) {
         return;
     }
-    
-    // debugging
-    
-    // ======[ Stratified Jittering ]======
-    // Monte Carlo == Create a Random Number
-    // pnrg
-    // http://www0.cs.ucl.ac.uk/staff/ucacbbl/ftp/papers/langdon_2009_CIGPU.pdf
+
+    // [ Current Bounce Information ]
     int seed = seed_memory[gid];
+    
+    float4 w = {1.0f,1.0f,1.0f,1.0f};
+    float4 c = {0.0f,0.0f,0.0f,0.0f};
+    
+    Ray ray = create_ray(PRIMARY,0);
+    
+    //=======================================
+    // calculate pixel coordinates
     int n = 6;
     
-    // calculate pixel coordinates
     float x = fmod((float)gid,(float)width);
     float y = gid / (float)width;
-
+    
     x = (x/(float)width) - 0.5f;
     y = (y/(float)height) - 0.5f;
-
+    
     float left_limit = x - 1/(float)(width + width);
     float top_limit = y - 1/(float)(height + height);
     
@@ -926,25 +873,30 @@ __kernel void pathtracer_kernel(__read_only image1d_t texture_triangles,
     
     float inv_n_w = 1/(float)(n * width);
     float inv_n_h = 1/(float)(n * height);
-
+    
     x = left_limit + ((cell%n) + rand(&seed)) * inv_n_w;
     y = top_limit + ((cell/n)  + rand(&seed)) * inv_n_h;
     //=======================================
-    
     
     ray.origin = camera->eye;
     ray.direction = normalize((x * camera->u) + (y * camera->v) + -(camera->n));
     ray.t = 1000.f;
     
-    color = pathtrace(ray,primitives,n_primitives,
-                      texture_triangles,n_triangles,
-                      materials,n_materials,
-                      texture_bvh_bbox,
-                      texture_bvh_info,n_nodes,
-                      &seed);
+    // path trace
+    float4  final_color = pathtrace(&ray,primitives,n_primitives,
+                                    texture_triangles,n_triangles,
+                                    materials,n_materials,
+                                    texture_bvh_bbox,
+                                    texture_bvh_info,n_nodes,
+                                    &seed,c,&w);
     
-    setPixel(&pixel,color);
+    // random number generator
+    seed_memory[gid] = seed;//seed;
     
-    seed_memory[gid] = seed;
-    image[gid] = pixel;
+    color[gid] = final_color; //color
+    weight[gid] = w; //weight to start with next time
+    
+    //new information for ray
+    origin[gid] = ray.origin;
+    direction[gid] = ray.direction;
 }

@@ -2,6 +2,10 @@
 
 static float ONE_THIRD_RT = 0.57735026919f;
 
+void printclf4(cl_float4 f) {
+    printf("%f %f %f %f   ",f.x,f.y,f.z,f.w);
+}
+
 // Primitive Constructor
 Primitive create_primitive(){
     Primitive primitive;
@@ -61,6 +65,7 @@ void set(cl_float4 &dst, Vec4f vec) {
 
 // constructor
 Pathtracer::Pathtracer(int w, int h) {
+
     ocl_manager = new OpenCL_Manager();
     ocl_manager->initialize(w,h);
     ocl_manager->kernel_load("pathtracer_kernel.cl",
@@ -75,8 +80,39 @@ Pathtracer::Pathtracer(int w, int h) {
     for(int i = 0; i < (width*height); i++) {
         seed_memory[i] = (rand() % 2147483646)+1;
     }
-    
+
     image_data = new Pixel[width*height];
+
+    // new
+    //first bounce information
+    int dim = width * height;
+
+    first_bounce_origin = new cl_float4[dim];
+    first_bounce_direction = new cl_float4[dim];
+    first_bounce_color = new cl_float4[dim];
+    first_bounce_weight = new cl_float4[dim];
+    
+    // ray information
+    origin = new cl_float4[width*height];
+    direction = new cl_float4[width*height];
+    
+    // color information
+    color = new cl_float4[width*height];
+    weight = new cl_float4[width*height];
+    bounce = new int[width*height];
+    
+    iteration_memory = new int[width*height];
+    
+    for(int i = 0; i < width*height; i++) {
+        iteration_memory[i] = 1;
+        
+        bounce[i] = 0;
+        
+        first_bounce_origin[i] = (cl_float4) {0.0,0.0,0.0,0.0};
+        first_bounce_direction[i] = (cl_float4) {0.0,0.0,0.0,0.0};
+    }
+    
+
     
     camera = new Camera();
 }
@@ -96,6 +132,52 @@ Pixel* Pathtracer::get_image() {
 
 int Pathtracer::get_iterations(){
     return iterations;
+}
+
+
+
+// sets initial values
+// wraps initial ray kernel execute
+void Pathtracer::iterative_render_first_bounce() {
+    ocl_manager->initial_ray_kernel_execute(primitives,camera,n_primitives,
+                                            width,height,seed_memory,iterations,
+                                            triangles,n_triangles,
+                                            materials, n_materials,
+                                            bvh_nodes,n_nodes,first_bounce_color,
+                                            first_bounce_origin,first_bounce_direction,
+                                            first_bounce_weight);
+    
+//    for (int i = 0; i < width*height; i++) {
+////        if(first_bounce_color[i].s3 != 1.0f) {
+//            printclf4(first_bounce_color[i]);
+////            printclf4(first_bounce_origin[i]);
+//            printf("\n");
+////        }
+//    }
+}
+
+void Pathtracer::iterative_render() {
+    
+//    for (int i = 0; i < width*height; i++) {
+//        printclf4(first_bounce_weight[i]);
+//        printf(" %d\n",bounce[i]);
+//    }
+    // [ Path Trace !! ]
+    ocl_manager->ray_kernel_execute(primitives, camera, n_primitives, width,
+                                    height, seed_memory, iterations, triangles,n_triangles,
+                                    materials, n_materials, n_nodes, color, origin, direction,
+                                    weight, bounce,first_bounce_color, first_bounce_origin,
+                                    first_bounce_direction, first_bounce_weight, iteration_memory);
+    iterations++;
+    
+//    for (int i = 0; i < width*height; i++) {
+//        printclf4(color[i]);
+//        printf(" %d\n",bounce[i]);
+//    }
+}
+
+void Pathtracer::reconstruct() {
+    ocl_manager->reconstruct_kernel_execute(image_data, width*height, color, iteration_memory);
 }
 
 // fake render
@@ -145,9 +227,12 @@ int Pathtracer::set_camera() {
 //    {0.3,0.7,-0.7,0}
     Vec4f lookat = Vec4f(0,0,0,0);
 //    Vec4f lookat = Vec4f(24.282, 32.6095, -1.10804, 0);
-//    Vec4f eye = Vec4f(0,0,-3,0);
-    Vec4f eye = Vec4f(0,-1,-200.0f,0);
+    Vec4f eye = Vec4f(0,0,-200,0);
+//    Vec4f eye = Vec4f(0,0,-0.05f,0);
 
+//    Vec4f lookat = Vec4f(-0.003410, 0.130320, 0.021754,0);
+//    Vec4f eye = Vec4f(-0.003410, 0.130320, 0.011754,0);
+    
     Vec4f most_perpendicular;
     Vec4f look_vec = lookat - eye;
 
@@ -177,9 +262,7 @@ int Pathtracer::set_camera() {
     return 1;
 }
 
-void printclf4(cl_float4 f) {
-    printf("%f %f %f %f   ",f.x,f.y,f.z,f.w);
-}
+
 
 void printclf3(cl_float3 f) {
     printf("%f %f %f   ",f.x,f.y,f.z);
@@ -201,21 +284,22 @@ int Pathtracer::set_triangles(std::vector<Vec3f> vertices) {
     for (int i = 0; i < vertices.size(); i += 3) {
         vector_triangles.push_back(VectorTriangle(vertices[i],vertices[i+1],
                                                   vertices[i+2]));
-//        vertices[i].print();
-//        vertices[i+1].print();
-//        vertices[i+2].print();
-//        vector_triangles[i/3].bbox.minbounds.print();
-//        vector_triangles[i/3].bbox.maxbounds.print();
-//        std::cout << "\n";
     }
 //
-    // build Bounding Volume Hierarchy
+    // [ Bounding Volume Hierarchy ]
     bvh_constructor = BoundingVolumeHierarchy(vector_triangles);
 
     bvh_constructor.buildTree();
     
     bvh_nodes = bvh_constructor.get_bvh();
+   
+    bvh_bbox = bvh_constructor.get_bvh_bbox();
+    bvh_info = bvh_constructor.get_bvh_info();
+    
     n_nodes = bvh_constructor.get_n_nodes();
+    
+    ocl_manager->bvh_to_texture(bvh_bbox, bvh_info, n_nodes);
+
 
     // [ Triangle ]
     std::vector<VectorTriangle> ovt = bvh_constructor.get_triangles();
@@ -225,6 +309,7 @@ int Pathtracer::set_triangles(std::vector<Vec3f> vertices) {
 
     for (int i = 0; i < ovt.size(); i++) {
         triangles[i] = create_triangle(ovt[i].v1,ovt[i].v2,ovt[i].v3);
+//        ovt[i].print();
     }
     
     // prepare texture
@@ -240,11 +325,11 @@ int Pathtracer::set_scene() {
     n_materials = 1;
     materials = (Material*)malloc(sizeof(Material) * n_materials);
     materials[0] = create_material();
-//    materials[0].diffuse = {0.6,0.4,0.2,0.0};
-materials[0].diffuse = {1.0,1.0,1.0,0};
-materials[0].specular = {1.0,1.0,1.0,0};
+    materials[0].diffuse = {0.6,0.4,0.2,0.0};
+//materials[0].diffuse = {1.0,1.0,1.0,0};
+//materials[0].specular = {1.0,1.0,1.0,0};
 //materials[0].specular = {0.7,0.7,0.2,0};
-materials[0].refractive = {1.0,0,0,2.9};
+//materials[0].refractive = {1.0,0,0,2.9};
     
     // [ Primitives ]
     n_primitives = 5;

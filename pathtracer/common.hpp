@@ -117,10 +117,22 @@ struct BVH_Node {
     cl_float minboundsx, minboundsy, minboundsz;
     cl_float maxboundsx, maxboundsy, maxboundsz;
     
-    cl_short offset;
-    cl_short secondChildOffset;
-    cl_short nPrimitives;
-    cl_short axis;
+    cl_float offset;
+    cl_float secondChildOffset;
+    cl_float nPrimitives;
+    cl_float axis;
+};
+
+struct BVH_Node_BBox {
+    cl_float minboundsx, minboundsy, minboundsz;
+    cl_float maxboundsx, maxboundsy, maxboundsz;
+};
+
+struct BVH_Node_Info {
+    cl_int offset;
+    cl_int secondChildOffset;
+    cl_int nPrimitives;
+    cl_int axis;
 };
 
 // ===[ Primitive ]===

@@ -45,6 +45,9 @@ private:
     
     // Bounding Volume Hierarchy
     BVH_Node* bvh;
+    BVH_Node_BBox *bvh_bbox;
+    BVH_Node_Info *bvh_info;
+
     bool bvh_initialized;
 
     // for BVH construction
@@ -62,7 +65,11 @@ public:
     
     void buildTree();
     std::vector<VectorTriangle> get_triangles();
+    
     BVH_Node* get_bvh();
+    BVH_Node_BBox* get_bvh_bbox();
+    BVH_Node_Info* get_bvh_info();
+
     int get_n_nodes();
 };
 

@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		C712D4DA1C794488004B1591 /* bvh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C712D4D81C794488004B1591 /* bvh.cpp */; };
 		C736B9BA1BB4D04500E25468 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C736B9B91BB4D04500E25468 /* OpenGL.framework */; };
+		C73F755A1CC9A5B100308A37 /* initial_ray_kernel.cl in Sources */ = {isa = PBXBuildFile; fileRef = C73F75591CC9A5B100308A37 /* initial_ray_kernel.cl */; };
+		C73F755D1CC9B75700308A37 /* ray_kernel.cl in Sources */ = {isa = PBXBuildFile; fileRef = C73F755C1CC9B75700308A37 /* ray_kernel.cl */; };
+		C73F755F1CC9C13100308A37 /* reconstruct_kernel.cl in Sources */ = {isa = PBXBuildFile; fileRef = C73F755E1CC9C13100308A37 /* reconstruct_kernel.cl */; };
 		C745117E1BB9E99500CF4C3D /* boost.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C745117D1BB9E99500CF4C3D /* boost.framework */; };
 		C74DF08D1B9FBC7F0002CA28 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C74DF08C1B9FBC7F0002CA28 /* main.cpp */; };
 		C74DF0941B9FBCD80002CA28 /* OpenCL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C74DF0931B9FBCD80002CA28 /* OpenCL.framework */; };
@@ -41,6 +44,9 @@
 		C736B9B71BB4BB2000E25468 /* common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = common.hpp; sourceTree = "<group>"; };
 		C736B9B81BB4CFDC00E25468 /* vecmath */ = {isa = PBXFileReference; lastKnownFileType = folder; path = vecmath; sourceTree = "<group>"; };
 		C736B9B91BB4D04500E25468 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		C73F75591CC9A5B100308A37 /* initial_ray_kernel.cl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.opencl; path = initial_ray_kernel.cl; sourceTree = "<group>"; };
+		C73F755C1CC9B75700308A37 /* ray_kernel.cl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.opencl; path = ray_kernel.cl; sourceTree = "<group>"; };
+		C73F755E1CC9C13100308A37 /* reconstruct_kernel.cl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.opencl; path = reconstruct_kernel.cl; sourceTree = "<group>"; };
 		C745117D1BB9E99500CF4C3D /* boost.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = boost.framework; path = "../7513324-a840fee893331ab946ea031bb3c6049a1a71b26d/osx/framework/boost.framework"; sourceTree = "<group>"; };
 		C74DF0891B9FBC7F0002CA28 /* pathtracer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = pathtracer; sourceTree = BUILT_PRODUCTS_DIR; };
 		C74DF08C1B9FBC7F0002CA28 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -102,6 +108,9 @@
 				C7B4E7C81C148C3E00AC8238 /* obj_reader.cpp */,
 				C7B4E7C91C148C3E00AC8238 /* obj_reader.hpp */,
 				C78DFD6F1BAF35D700E58B64 /* pathtracer_kernel.cl */,
+				C73F75591CC9A5B100308A37 /* initial_ray_kernel.cl */,
+				C73F755C1CC9B75700308A37 /* ray_kernel.cl */,
+				C73F755E1CC9C13100308A37 /* reconstruct_kernel.cl */,
 			);
 			path = pathtracer;
 			sourceTree = "<group>";
@@ -177,7 +186,10 @@
 				C7AFA2B41BCDD419003A5C5D /* pathtracer.cpp in Sources */,
 				C7AFA2B51BCDD419003A5C5D /* opencl_manager.cpp in Sources */,
 				C7AFA2B61BCDD419003A5C5D /* png_writer.cpp in Sources */,
+				C73F755F1CC9C13100308A37 /* reconstruct_kernel.cl in Sources */,
+				C73F755A1CC9A5B100308A37 /* initial_ray_kernel.cl in Sources */,
 				C74DF08D1B9FBC7F0002CA28 /* main.cpp in Sources */,
+				C73F755D1CC9B75700308A37 /* ray_kernel.cl in Sources */,
 				C712D4DA1C794488004B1591 /* bvh.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -19,9 +19,27 @@ private:
     Material *materials;
     Camera *camera;
     OpenCL_Manager *ocl_manager;
-    Pixel* image_data;
     BVH_Node *bvh_nodes;
+    BVH_Node_Info *bvh_info;
+    BVH_Node_BBox *bvh_bbox;
+    
+    Pixel* image_data;
     int* seed_memory;
+    
+    // [new memory]
+    cl_float4 *first_bounce_origin;
+    cl_float4 *first_bounce_direction;
+    cl_float4 *first_bounce_color;
+    cl_float4 *first_bounce_weight;
+
+    cl_float4 *origin;
+    cl_float4 *direction;
+    
+    cl_float4 *weight;
+    cl_float4 *color;
+    
+    int *iteration_memory;
+    int *bounce;
     
     int n_primitives;
     int n_materials;
@@ -41,7 +59,15 @@ public:
     int set_scene();
     int set_camera();
     int set_triangles(std::vector<Vec3f> vertices);
+
     Pixel* render();
+    
+    //iterative render
+    void iterative_render_first_bounce();
+    
+    void iterative_render();
+    
+    void reconstruct();
     
     // getters
     int get_width();

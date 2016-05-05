@@ -31,13 +31,16 @@
 #include <cstdio>
 
 #define PATH_TRACER_BITMAP 13
+#pragma OPENCL EXTENSION cl_khr_fp16 : enable
+
 
 // constants
 const bool DEBUG_MODE = false;
 
 Pathtracer *pathtracer = NULL;
-int window_height = 720;
-int window_width = 720;
+int window_height = 100;
+int window_width = 100;
+
 int size = window_height * window_width;
 int iterations = 0;
 
@@ -52,6 +55,11 @@ void errorm(std::string error_message) {
 
 // ===[ M A I N ]===
 int main(int argc, char **argv) {
+    
+    if(DEBUG_MODE) {
+        window_height = 1;
+        window_width = 1;
+    }
     
 //    BoundingBox bbox;
 //    Vec3f v1 = Vec3f(0.0179529,1.19773,0.449576);
@@ -94,13 +102,16 @@ int main(int argc, char **argv) {
         errorm("Couldn't read the OBJ File.");
     }
     
-//    // Scene (not triangles)
+    // Scene (not triangles)
     pathtracer->set_scene();
-//
-//    // Camera
+    
+    // Camera
     pathtracer->set_camera();
-//
-//    // Display
+    
+    // Iterative Render First Bounce
+    pathtracer->iterative_render_first_bounce();
+
+    // Display
     initialize(argc, argv);
     
     return 0;
@@ -112,8 +123,15 @@ void display() {
     iterations++;
     std::clock_t start = std::clock();
     double duration;
+//
+//    Pixel *f_pixels = pathtracer->render();
+//    float* pixels = (float*)f_pixels;
     
-    Pixel *f_pixels = pathtracer->render();
+    pathtracer->iterative_render();
+    pathtracer->reconstruct();
+//    exit(1);
+
+    Pixel *f_pixels = pathtracer->get_image();
     float* pixels = (float*)f_pixels;
     
     duration = (std::clock()-start)/(double) CLOCKS_PER_SEC;

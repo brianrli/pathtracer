@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "pathtracer/opencl_manager.cpp"
-            timestampString = "480468661.451755"
+            timestampString = "483752208.91813"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "114"
-            endingLineNumber = "114"
+            startingLineNumber = "167"
+            endingLineNumber = "167"
             landmarkName = "OpenCL_Manager::kernel_load(std::string file_name, std::string kernel_name)"
             landmarkType = "5">
          </BreakpointContent>
@@ -26,7 +26,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "pathtracer/pathtracer_kernel.cl"
-            timestampString = "481833676.106641"
+            timestampString = "482977163.797648"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "821"
@@ -62,11 +62,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "pathtracer/bvh.cpp"
-            timestampString = "478040593.191733"
+            timestampString = "482288046.797677"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "58"
-            endingLineNumber = "58"
+            startingLineNumber = "77"
+            endingLineNumber = "77"
             landmarkName = "BoundingVolumeHierarchy::buildTree()"
             landmarkType = "5">
          </BreakpointContent>
@@ -92,11 +92,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "pathtracer/bvh.cpp"
-            timestampString = "481667976.781261"
+            timestampString = "482288046.797677"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "159"
-            endingLineNumber = "159"
+            startingLineNumber = "181"
+            endingLineNumber = "181"
             landmarkName = "BoundingVolumeHierarchy::recBuildTree(int start, int end)"
             landmarkType = "5">
          </BreakpointContent>
@@ -169,12 +169,108 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "pathtracer/opencl_manager.cpp"
-            timestampString = "480800111.193603"
+            timestampString = "483752208.91813"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "183"
-            endingLineNumber = "183"
+            startingLineNumber = "214"
+            endingLineNumber = "214"
             landmarkName = "OpenCL_Manager::triangles_to_texture(Triangle *triangles,int n_triangles)"
+            landmarkType = "5">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "pathtracer/opencl_manager.cpp"
+            timestampString = "483752208.91813"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "252"
+            endingLineNumber = "252"
+            landmarkName = "OpenCL_Manager::bvh_to_texture(BVH_Node_BBox *bbox, BVH_Node_Info *info, int n_nodes)"
+            landmarkType = "5">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "pathtracer/opencl_manager.cpp"
+            timestampString = "483752208.91813"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "220"
+            endingLineNumber = "220"
+            landmarkName = "OpenCL_Manager::triangles_to_texture(Triangle *triangles,int n_triangles)"
+            landmarkType = "5">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/OpenCL.framework/Versions/A/Headers/cl.hpp"
+            timestampString = "483751238.400085"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "5667"
+            endingLineNumber = "5667"
+            landmarkName = "enqueueReadBuffer( const Buffer&amp; buffer, cl_bool blocking, ::size_t offset, ::size_t size, void* ptr, const VECTOR_CLASS&lt;Event&gt;* events = NULL, Event* event = NULL)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/OpenCL.framework/Versions/A/Headers/cl.hpp"
+            timestampString = "483751240.39982"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "5665"
+            endingLineNumber = "5665"
+            landmarkName = "enqueueReadBuffer( const Buffer&amp; buffer, cl_bool blocking, ::size_t offset, ::size_t size, void* ptr, const VECTOR_CLASS&lt;Event&gt;* events = NULL, Event* event = NULL)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../../../../../Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/OpenCL.framework/Versions/A/Headers/cl.hpp"
+            timestampString = "483751240.935869"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "5666"
+            endingLineNumber = "5666"
+            landmarkName = "enqueueReadBuffer( const Buffer&amp; buffer, cl_bool blocking, ::size_t offset, ::size_t size, void* ptr, const VECTOR_CLASS&lt;Event&gt;* events = NULL, Event* event = NULL)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "pathtracer/pathtracer.cpp"
+            timestampString = "483895383.006175"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "170"
+            endingLineNumber = "170"
+            landmarkName = "Pathtracer::iterative_render()"
             landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>

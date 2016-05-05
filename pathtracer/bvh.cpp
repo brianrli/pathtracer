@@ -21,6 +21,21 @@ BVH_Node* BoundingVolumeHierarchy::get_bvh(){
     return NULL;
 };
 
+BVH_Node_BBox* BoundingVolumeHierarchy::get_bvh_bbox(){
+    if(bvh_initialized) {
+        return bvh_bbox;
+    }
+    return NULL;
+};
+
+BVH_Node_Info* BoundingVolumeHierarchy::get_bvh_info(){
+    if(bvh_initialized) {
+        return bvh_info;
+    }
+    return NULL;
+};
+
+
 int BoundingVolumeHierarchy::get_n_nodes() {
     return totalNodes;
 };
@@ -54,7 +69,11 @@ void BoundingVolumeHierarchy::buildTree() {
 
 	// build bounding volume hierarchy recursively
 	TreeNode *root = recBuildTree(start,end);
+    
+
     bvh = (BVH_Node*)malloc(sizeof(BVH_Node) * totalNodes);
+    bvh_bbox = (BVH_Node_BBox*)malloc(sizeof(BVH_Node_BBox) * totalNodes);
+    bvh_info = (BVH_Node_Info*)malloc(sizeof(BVH_Node_Info) * totalNodes);
     
 //        cout << "TotalNodes: " << totalNodes << "\n";
 //        cout << "unordered vt size: " << vtriangles.size() << "\n";
@@ -64,30 +83,33 @@ void BoundingVolumeHierarchy::buildTree() {
     
     //make sure all are present
     
+//    std::cout << sizeof(BVH_Node)*totalNodes << "\n";
+//    std::cout << sizeof(cl_float) << "\n";
     
     // flatten tree
     int offset = 0;
     flattenTree(root,&offset);
-    for(int i = 0; i < totalNodes; i++) {
-        cout << i << " : ";
-        cout << bvh[i].nPrimitives << " ";
-        if (bvh[i].nPrimitives == 0) {
-            cout << bvh[i].secondChildOffset << " ";
-        }
-        else {
-            cout << bvh[i].offset << " ";
-        }
-        cout << "minbounds:" << bvh[i].minboundsx << " ";
-        cout << bvh[i].minboundsy << " ";
-        cout << bvh[i].minboundsz << " | ";
-        
-        cout << "maxbounds:" << bvh[i].maxboundsx << " ";
-        cout << bvh[i].maxboundsy << " ";
-        cout << bvh[i].maxboundsz << " ";
-        
-        cout << "\n";
-    }
-//
+    
+//    for(int i = 0; i < totalNodes; i++) {
+//        cout << i << " : ";
+//        cout << bvh[i].nPrimitives << " ";
+//        if (bvh[i].nPrimitives == 0) {
+//            cout << bvh[i].secondChildOffset << " ";
+//        }
+//        else {
+//            cout << bvh[i].offset << " ";
+//        }
+//        cout << "minbounds:" << bvh[i].minboundsx << " ";
+//        cout << bvh[i].minboundsy << " ";
+//        cout << bvh[i].minboundsz << " | ";
+//        
+//        cout << "maxbounds:" << bvh[i].maxboundsx << " ";
+//        cout << bvh[i].maxboundsy << " ";
+//        cout << bvh[i].maxboundsz << " ";
+//        
+//        cout << "\n";
+//    }
+////
 //    cout << "finished\n";
     bvh_initialized = true;
 //    cout << totalNodes << "\n";
@@ -313,7 +335,7 @@ TreeNode* BoundingVolumeHierarchy::recBuildTree(int start, int end) {
     return node;
 }
 
-int BoundingVolumeHierarchy::flattenTree(TreeNode *node, int *offset) {
+int BoundingVolumeHierarchy::flattenTree(TreeNode *node,int *offset) {
 
     int k = *offset;
 //    cout << "k: " << k << "\n";
@@ -329,20 +351,39 @@ int BoundingVolumeHierarchy::flattenTree(TreeNode *node, int *offset) {
     bvh[k].maxboundsy = node->bbox.maxbounds[1];
     bvh[k].maxboundsz = node->bbox.maxbounds[2];
     
+    // new code
+    bvh_bbox[k].minboundsx = node->bbox.minbounds[0];
+    bvh_bbox[k].minboundsy = node->bbox.minbounds[1];
+    bvh_bbox[k].minboundsz = node->bbox.minbounds[2];
+    
+    bvh_bbox[k].maxboundsx = node->bbox.maxbounds[0];
+    bvh_bbox[k].maxboundsy = node->bbox.maxbounds[1];
+    bvh_bbox[k].maxboundsz = node->bbox.maxbounds[2];
+    
     uint32_t myOffset = (*offset)++;
     
     if (node->nPrimitives > 0) {
-//        Assert(!node->children[0] && !node->children[1]);
+        // [ old ]
         bvh[k].offset = (cl_short)node->index;
         bvh[k].nPrimitives = (cl_short)node->nPrimitives;
-//        cout << bvh[k].nPrimitives << " " << node->nPrimitives << "\n";
+        
+        // [ new ]
+        bvh_info[k].offset = (cl_int)node->index;
+        bvh_info[k].nPrimitives = (cl_int)node->nPrimitives;
     }
     else {
+        
         bvh[k].axis = (cl_short)node->axis;
         bvh[k].nPrimitives = 0;
+        
+        bvh_info[k].axis = (cl_int)node->axis;
+        bvh_info[k].nPrimitives = 0;
+
         flattenTree(node->children[0], offset);
+
         bvh[k].secondChildOffset = flattenTree(node->children[1],
                                                offset);
+        bvh_info[k].secondChildOffset = bvh[k].secondChildOffset;
     }
     
     return myOffset;
